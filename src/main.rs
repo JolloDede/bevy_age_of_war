@@ -4,7 +4,6 @@ mod age_of_war;
 use crate::age_of_war::*;
 
 mod hud;
-use crate::hud::*;
 
 fn main() {
     App::new()
