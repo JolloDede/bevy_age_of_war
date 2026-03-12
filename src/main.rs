@@ -3,6 +3,8 @@ use bevy::prelude::*;
 mod age_of_war;
 use crate::age_of_war::*;
 
+mod consts;
+mod event;
 mod hud;
 
 fn main() {

@@ -1,4 +1,6 @@
-use bevy::prelude::*;
+use bevy::{camera::visibility::RenderLayers, prelude::*};
+
+use crate::{consts::HUD_LAYER, event::UnitSpawnEvent};
 
 pub struct HudPlugin;
 
@@ -6,7 +8,9 @@ impl Plugin for HudPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_camera);
         app.add_systems(Startup, setup_buttons);
-        app.add_systems(Update, menu_button_system);
+        app.add_systems(Startup, setup_queue);
+        app.add_systems(Update, menu_navigation_button_system);
+        app.add_systems(Update, main_button_system);
         app.add_systems(Update, unit_button_system);
         app.add_systems(Update, turret_button_system);
     }
@@ -16,7 +20,15 @@ impl Plugin for HudPlugin {
 struct HudCamera;
 
 fn spawn_camera(mut commands: Commands) {
-    commands.spawn((Camera2d::default(), HudCamera));
+    commands.spawn((
+        Camera2d::default(),
+        Camera {
+            order: 1,
+            ..default()
+        },
+        RenderLayers::layer(HUD_LAYER),
+        HudCamera,
+    ));
 }
 
 const ACTION_BUTTON_WIDTH: i32 = 60;
@@ -31,13 +43,17 @@ enum ButtonGroup {
 }
 
 #[derive(Component)]
-enum MenuActionButton {
+enum MenuNavigationButtons {
     Unit,
     Turret,
+    Back,
+}
+
+#[derive(Component)]
+enum MenuActionButton {
     SelTurret,
     UpgradeBase,
     AdvanceAge,
-    Back,
 }
 
 #[derive(Component)]
@@ -46,6 +62,13 @@ enum UnitButtons {
     Ranged,
     Tank,
     Super,
+}
+
+#[derive(Component)]
+enum TurretButtons {
+    Small,
+    Medium,
+    Big,
 }
 
 fn setup_buttons(mut commands: Commands) {
@@ -61,14 +84,17 @@ fn setup_buttons(mut commands: Commands) {
 
     // Root vertical container
     commands
-        .spawn((Node {
-            width: percent(100),
-            height: percent(100),
-            flex_direction: FlexDirection::Column,
-            justify_content: JustifyContent::Start,
-            align_items: AlignItems::Start,
-            ..default()
-        },))
+        .spawn((
+            Node {
+                width: percent(100),
+                height: percent(100),
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Start,
+                align_items: AlignItems::Start,
+                ..default()
+            },
+            RenderLayers::layer(HUD_LAYER),
+        ))
         .with_children(|parent| {
             // First row
             parent
@@ -86,7 +112,7 @@ fn setup_buttons(mut commands: Commands) {
                 .with_children(|row| {
                     row.spawn((
                         default_node.clone(),
-                        MenuActionButton::Unit,
+                        MenuNavigationButtons::Unit,
                         Button,
                         BackgroundColor(Color::linear_rgb(1.0, 0.0, 0.0)),
                         children![(
@@ -100,7 +126,7 @@ fn setup_buttons(mut commands: Commands) {
                     ));
                     row.spawn((
                         default_node.clone(),
-                        MenuActionButton::Turret,
+                        MenuNavigationButtons::Turret,
                         Button,
                         BackgroundColor(Color::linear_rgb(1.0, 0.0, 0.0)),
                         children![(
@@ -173,6 +199,7 @@ fn setup_buttons(mut commands: Commands) {
                 .with_children(|row| {
                     row.spawn((
                         default_node.clone(),
+                        UnitButtons::Meele,
                         Button,
                         BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
                         children![(
@@ -186,6 +213,7 @@ fn setup_buttons(mut commands: Commands) {
                     ));
                     row.spawn((
                         default_node.clone(),
+                        UnitButtons::Ranged,
                         Button,
                         BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
                         children![(
@@ -199,6 +227,7 @@ fn setup_buttons(mut commands: Commands) {
                     ));
                     row.spawn((
                         default_node.clone(),
+                        UnitButtons::Tank,
                         Button,
                         BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
                         children![(
@@ -212,6 +241,7 @@ fn setup_buttons(mut commands: Commands) {
                     ));
                     row.spawn((
                         default_node.clone(),
+                        UnitButtons::Super,
                         Button,
                         BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
                         children![(
@@ -225,7 +255,7 @@ fn setup_buttons(mut commands: Commands) {
                     ));
                     row.spawn((
                         default_node.clone(),
-                        MenuActionButton::Back,
+                        MenuNavigationButtons::Back,
                         Button,
                         BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
                         children![(
@@ -256,6 +286,7 @@ fn setup_buttons(mut commands: Commands) {
                 .with_children(|row| {
                     row.spawn((
                         default_node.clone(),
+                        TurretButtons::Small,
                         Button,
                         BackgroundColor(Color::linear_rgb(0.0, 1.0, 0.5)),
                         children![(
@@ -269,6 +300,7 @@ fn setup_buttons(mut commands: Commands) {
                     ));
                     row.spawn((
                         default_node.clone(),
+                        TurretButtons::Medium,
                         Button,
                         BackgroundColor(Color::linear_rgb(0.0, 1.0, 0.5)),
                         children![(
@@ -282,6 +314,7 @@ fn setup_buttons(mut commands: Commands) {
                     ));
                     row.spawn((
                         default_node.clone(),
+                        TurretButtons::Big,
                         Button,
                         BackgroundColor(Color::linear_rgb(0.0, 1.0, 0.5)),
                         children![(
@@ -295,7 +328,7 @@ fn setup_buttons(mut commands: Commands) {
                     ));
                     row.spawn((
                         default_node.clone(),
-                        MenuActionButton::Back,
+                        MenuNavigationButtons::Back,
                         Button,
                         BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
                         children![(
@@ -311,14 +344,50 @@ fn setup_buttons(mut commands: Commands) {
         });
 }
 
-fn menu_button_system(
-    action_query: Query<(&Interaction, &MenuActionButton), (Changed<Interaction>, With<Button>)>,
+const QUEUE_COLOR: Color = Color::linear_rgb(0.6, 0.6, 0.0);
+const QUEUE_RECT_WIDTH: i32 = 20;
+const QUEUE_RECT_HEIGHT: i32 = 20;
+fn setup_queue(mut commands: Commands) {
+    let queue_size = Vec2::new(10.0, 10.0);
+    let default_node = Node {
+        width: px(QUEUE_RECT_WIDTH),
+        height: px(QUEUE_RECT_HEIGHT),
+        border: UiRect::all(px(5)),
+        border_radius: BorderRadius::ZERO,
+        justify_content: JustifyContent::Center,
+        align_items: AlignItems::Center,
+        ..default()
+    };
+
+    commands
+        .spawn((
+            Node {
+                width: percent(100),
+                height: percent(100),
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Start,
+                align_items: AlignItems::Start,
+                ..default()
+            },
+            RenderLayers::layer(HUD_LAYER),
+        ))
+        .with_children(|parent| {
+            // First row
+            parent.spawn(Sprite::from_color(QUEUE_COLOR, queue_size));
+        });
+}
+
+fn menu_navigation_button_system(
+    action_query: Query<
+        (&Interaction, &MenuNavigationButtons),
+        (Changed<Interaction>, With<Button>),
+    >,
     mut button_groups: Query<(&ButtonGroup, &mut Node)>,
 ) {
     for (interaction, action) in action_query {
         if *interaction == Interaction::Pressed {
             match action {
-                MenuActionButton::Unit => {
+                MenuNavigationButtons::Unit => {
                     for (group, mut node) in &mut button_groups {
                         node.display = match group {
                             ButtonGroup::Main => Display::None,
@@ -327,7 +396,7 @@ fn menu_button_system(
                         };
                     }
                 }
-                MenuActionButton::Turret => {
+                MenuNavigationButtons::Turret => {
                     for (group, mut node) in &mut button_groups {
                         node.display = match group {
                             ButtonGroup::Main => Display::None,
@@ -336,16 +405,7 @@ fn menu_button_system(
                         };
                     }
                 }
-                MenuActionButton::SelTurret => {
-                    println!("Sel turret")
-                }
-                MenuActionButton::UpgradeBase => {
-                    println!("Upgrade base")
-                }
-                MenuActionButton::AdvanceAge => {
-                    println!("advance age")
-                }
-                MenuActionButton::Back => {
+                MenuNavigationButtons::Back => {
                     for (group, mut node) in &mut button_groups {
                         node.display = match group {
                             ButtonGroup::Main => Display::Flex,
@@ -359,5 +419,69 @@ fn menu_button_system(
     }
 }
 
-fn unit_button_system() {}
-fn turret_button_system() {}
+fn main_button_system(
+    action_query: Query<(&Interaction, &MenuActionButton), (Changed<Interaction>, With<Button>)>,
+) {
+    for (interaction, action) in action_query.iter() {
+        if *interaction == Interaction::Pressed {
+            match action {
+                MenuActionButton::SelTurret => {
+                    println!("Sel turret")
+                }
+                MenuActionButton::UpgradeBase => {
+                    println!("Upgrade base")
+                }
+                MenuActionButton::AdvanceAge => {
+                    println!("advance age")
+                }
+            }
+        }
+    }
+}
+
+fn unit_button_system(
+    mut commands: Commands,
+    action_query: Query<(&Interaction, &UnitButtons), (Changed<Interaction>, With<Button>)>,
+) {
+    for (interaction, action) in action_query.iter() {
+        if *interaction == Interaction::Pressed {
+            match action {
+                UnitButtons::Meele => {
+                    dbg!("Trigger meele event");
+                    commands.trigger(UnitSpawnEvent::Meele);
+                }
+                UnitButtons::Ranged => {
+                    dbg!("Trigger ranged event");
+                    commands.trigger(UnitSpawnEvent::Ranged);
+                }
+                UnitButtons::Tank => {
+                    dbg!("Trigger tank event");
+                    commands.trigger(UnitSpawnEvent::Tank);
+                }
+                UnitButtons::Super => {
+                    dbg!("Trigger super event");
+                    commands.trigger(UnitSpawnEvent::Super);
+                }
+            }
+        }
+    }
+}
+fn turret_button_system(
+    action_query: Query<(&Interaction, &TurretButtons), (Changed<Interaction>, With<Button>)>,
+) {
+    for (interaction, action) in action_query.iter() {
+        if *interaction == Interaction::Pressed {
+            match action {
+                TurretButtons::Small => {
+                    println!("Small Turret")
+                }
+                TurretButtons::Medium => {
+                    println!("Medium Turret")
+                }
+                TurretButtons::Big => {
+                    println!("Big Turret")
+                }
+            }
+        }
+    }
+}
