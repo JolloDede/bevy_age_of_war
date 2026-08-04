@@ -5,6 +5,7 @@ use crate::age_of_war::*;
 
 mod consts;
 mod event;
+mod game_unit;
 mod hud;
 
 fn main() {

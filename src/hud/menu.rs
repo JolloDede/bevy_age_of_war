@@ -1,63 +1,34 @@
 use bevy::{camera::visibility::RenderLayers, prelude::*};
 
-use crate::{consts::HUD_LAYER, event::UnitSpawnEvent};
-
-pub struct HudPlugin;
-
-impl Plugin for HudPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_camera);
-        app.add_systems(Startup, setup_buttons);
-        app.add_systems(Startup, setup_queue);
-        app.add_systems(Update, menu_navigation_button_system);
-        app.add_systems(Update, main_button_system);
-        app.add_systems(Update, unit_button_system);
-        app.add_systems(Update, turret_button_system);
-    }
-}
-
-#[derive(Component)]
-struct HudCamera;
-
-fn spawn_camera(mut commands: Commands) {
-    commands.spawn((
-        Camera2d::default(),
-        Camera {
-            order: 1,
-            ..default()
-        },
-        RenderLayers::layer(HUD_LAYER),
-        HudCamera,
-    ));
-}
+use crate::{consts::HUD_LAYER, event::UnitQueueEvent};
 
 const ACTION_BUTTON_WIDTH: i32 = 60;
 const ACTION_BUTTON_HEIGHT: i32 = 60;
 const TEMP_BUTTON_FONT: f32 = 12.0;
 
 #[derive(Component)]
-enum ButtonGroup {
+pub enum ButtonGroup {
     Main,
     Units,
     Turrets,
 }
 
 #[derive(Component)]
-enum MenuNavigationButtons {
+pub enum MenuNavigationButtons {
     Unit,
     Turret,
     Back,
 }
 
 #[derive(Component)]
-enum MenuActionButton {
+pub enum MenuActionButton {
     SelTurret,
     UpgradeBase,
     AdvanceAge,
 }
 
 #[derive(Component)]
-enum UnitButtons {
+pub enum UnitButtons {
     Meele,
     Ranged,
     Tank,
@@ -65,13 +36,13 @@ enum UnitButtons {
 }
 
 #[derive(Component)]
-enum TurretButtons {
+pub enum TurretButtons {
     Small,
     Medium,
     Big,
 }
 
-fn setup_buttons(mut commands: Commands) {
+pub fn setup_buttons(mut commands: Commands) {
     let default_node = Node {
         width: px(ACTION_BUTTON_WIDTH),
         height: px(ACTION_BUTTON_HEIGHT),
@@ -344,40 +315,7 @@ fn setup_buttons(mut commands: Commands) {
         });
 }
 
-const QUEUE_COLOR: Color = Color::linear_rgb(0.6, 0.6, 0.0);
-const QUEUE_RECT_WIDTH: i32 = 20;
-const QUEUE_RECT_HEIGHT: i32 = 20;
-fn setup_queue(mut commands: Commands) {
-    let queue_size = Vec2::new(10.0, 10.0);
-    let default_node = Node {
-        width: px(QUEUE_RECT_WIDTH),
-        height: px(QUEUE_RECT_HEIGHT),
-        border: UiRect::all(px(5)),
-        border_radius: BorderRadius::ZERO,
-        justify_content: JustifyContent::Center,
-        align_items: AlignItems::Center,
-        ..default()
-    };
-
-    commands
-        .spawn((
-            Node {
-                width: percent(100),
-                height: percent(100),
-                flex_direction: FlexDirection::Column,
-                justify_content: JustifyContent::Start,
-                align_items: AlignItems::Start,
-                ..default()
-            },
-            RenderLayers::layer(HUD_LAYER),
-        ))
-        .with_children(|parent| {
-            // First row
-            parent.spawn(Sprite::from_color(QUEUE_COLOR, queue_size));
-        });
-}
-
-fn menu_navigation_button_system(
+pub fn menu_navigation_button_system(
     action_query: Query<
         (&Interaction, &MenuNavigationButtons),
         (Changed<Interaction>, With<Button>),
@@ -419,7 +357,7 @@ fn menu_navigation_button_system(
     }
 }
 
-fn main_button_system(
+pub fn main_button_system(
     action_query: Query<(&Interaction, &MenuActionButton), (Changed<Interaction>, With<Button>)>,
 ) {
     for (interaction, action) in action_query.iter() {
@@ -439,7 +377,7 @@ fn main_button_system(
     }
 }
 
-fn unit_button_system(
+pub fn unit_button_system(
     mut commands: Commands,
     action_query: Query<(&Interaction, &UnitButtons), (Changed<Interaction>, With<Button>)>,
 ) {
@@ -448,25 +386,25 @@ fn unit_button_system(
             match action {
                 UnitButtons::Meele => {
                     dbg!("Trigger meele event");
-                    commands.trigger(UnitSpawnEvent::Meele);
+                    commands.trigger(UnitQueueEvent::Meele);
                 }
                 UnitButtons::Ranged => {
                     dbg!("Trigger ranged event");
-                    commands.trigger(UnitSpawnEvent::Ranged);
+                    commands.trigger(UnitQueueEvent::Ranged);
                 }
                 UnitButtons::Tank => {
                     dbg!("Trigger tank event");
-                    commands.trigger(UnitSpawnEvent::Tank);
+                    commands.trigger(UnitQueueEvent::Tank);
                 }
                 UnitButtons::Super => {
                     dbg!("Trigger super event");
-                    commands.trigger(UnitSpawnEvent::Super);
+                    commands.trigger(UnitQueueEvent::Super);
                 }
             }
         }
     }
 }
-fn turret_button_system(
+pub fn turret_button_system(
     action_query: Query<(&Interaction, &TurretButtons), (Changed<Interaction>, With<Button>)>,
 ) {
     for (interaction, action) in action_query.iter() {
