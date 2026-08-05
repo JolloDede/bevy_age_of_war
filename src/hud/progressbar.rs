@@ -1,10 +1,31 @@
+use std::time::Duration;
+
 use bevy::prelude::*;
 
-use crate::consts::{QUEUE_MARGIN_LEFT, QUEUE_MARGIN_TOP, QUEUE_RECT_HEIGHT};
+use crate::{
+    consts::{QUEUE_MARGIN_LEFT, QUEUE_MARGIN_TOP, QUEUE_RECT_HEIGHT},
+    event::{QueueTimerFinishedEvent, UnitQueueEvent, UnitSpawnEvent},
+    game_unit::GameUnit,
+};
 
 #[derive(Component)]
 pub struct QueueTimer {
-    timer: Timer,
+    pub timer: Timer,
+    pub unit: Option<GameUnit>,
+}
+
+impl QueueTimer {
+    pub fn set_unit(&mut self, unit: GameUnit) {
+        dbg!(self.timer.is_paused());
+        self.timer.set_duration(match unit {
+            GameUnit::Meele => Duration::from_secs(2),
+            GameUnit::Ranged => Duration::from_secs(4),
+            GameUnit::Tank => Duration::from_secs(6),
+            GameUnit::Super => Duration::from_secs(8),
+        });
+        self.timer.reset();
+        self.unit = Some(unit);
+    }
 }
 
 #[derive(Component)]
@@ -32,13 +53,14 @@ pub fn setup_progressbar(mut commands: Commands) {
             BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
             BorderColor::all(Color::WHITE),
             QueueTimer {
-                timer: Timer::from_seconds(3.0, TimerMode::Once),
+                timer: Timer::from_seconds(0.0, TimerMode::Once),
+                unit: None,
             },
         ))
         .with_children(|parent| {
             parent.spawn((
                 Node {
-                    width: Val::Percent(50.0),
+                    width: Val::Percent(0.0),
                     height: Val::Percent(100.0),
                     ..default()
                 },
@@ -49,11 +71,15 @@ pub fn setup_progressbar(mut commands: Commands) {
 }
 
 pub fn progressbar_system(
+    mut commands: Commands,
     time: Res<Time>,
     mut timer_query: Query<(&mut QueueTimer, &Children)>,
     mut style_query: Query<&mut Node, With<ProgressbarFill>>,
 ) {
     for (mut bar, children) in timer_query.iter_mut() {
+        if bar.unit.is_none() {
+            return;
+        }
         bar.timer.tick(time.delta());
 
         let percent = (1.0 - bar.timer.fraction()) * 100.0;
@@ -61,6 +87,10 @@ pub fn progressbar_system(
             if let Ok(mut node) = style_query.get_mut(child) {
                 node.width = Val::Percent(percent);
             }
+        }
+
+        if bar.timer.just_finished() {
+            commands.trigger(QueueTimerFinishedEvent);
         }
     }
 }

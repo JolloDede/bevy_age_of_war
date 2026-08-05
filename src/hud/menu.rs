@@ -385,19 +385,19 @@ pub fn unit_button_system(
         if *interaction == Interaction::Pressed {
             match action {
                 UnitButtons::Meele => {
-                    dbg!("Trigger meele event");
+                    info!("Trigger meele event");
                     commands.trigger(UnitQueueEvent::Meele);
                 }
                 UnitButtons::Ranged => {
-                    dbg!("Trigger ranged event");
+                    info!("Trigger ranged event");
                     commands.trigger(UnitQueueEvent::Ranged);
                 }
                 UnitButtons::Tank => {
-                    dbg!("Trigger tank event");
+                    info!("Trigger tank event");
                     commands.trigger(UnitQueueEvent::Tank);
                 }
                 UnitButtons::Super => {
-                    dbg!("Trigger super event");
+                    info!("Trigger super event");
                     commands.trigger(UnitQueueEvent::Super);
                 }
             }
