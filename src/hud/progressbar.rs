@@ -16,7 +16,6 @@ pub struct QueueTimer {
 
 impl QueueTimer {
     pub fn set_unit(&mut self, unit: GameUnit) {
-        dbg!(self.timer.is_paused());
         self.timer.set_duration(match unit {
             GameUnit::Meele => Duration::from_secs(2),
             GameUnit::Ranged => Duration::from_secs(4),

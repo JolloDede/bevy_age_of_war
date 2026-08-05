@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::game_unit::GameUnit;
 
-#[derive(Event)]
+#[derive(Event, Debug)]
 pub enum UnitQueueEvent {
     Meele,
     Ranged,

@@ -54,6 +54,8 @@
               libxkbcommon
               # wayland
               wayland
+
+              just
             ];
             RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
             RUST_BACKTRACE = 1;

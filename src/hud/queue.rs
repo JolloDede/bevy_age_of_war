@@ -100,6 +100,7 @@ pub fn unit_queue_observer(
     mut queue_entries: Query<&mut QueueEntry>,
     mut progress_query: Query<&mut QueueTimer>,
 ) {
+    debug!("Triggered UnitQueueEvent with: {:?}", unit.event());
     let mut queue_iter = queue_entries.iter_mut();
     while let Some(mut item) = queue_iter.next() {
         if item.0.is_none() {
