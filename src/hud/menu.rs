@@ -1,6 +1,6 @@
 use bevy::{camera::visibility::RenderLayers, prelude::*};
 
-use crate::{consts::HUD_LAYER, event::UnitQueueEvent};
+use crate::{consts::HUD_LAYER, event::UnitQueueEvent, game_unit::GameUnit};
 
 const ACTION_BUTTON_WIDTH: i32 = 60;
 const ACTION_BUTTON_HEIGHT: i32 = 60;
@@ -385,16 +385,16 @@ pub fn unit_button_system(
         if *interaction == Interaction::Pressed {
             match action {
                 UnitButtons::Meele => {
-                    commands.trigger(UnitQueueEvent::Meele);
+                    commands.trigger(UnitQueueEvent(GameUnit::Meele));
                 }
                 UnitButtons::Ranged => {
-                    commands.trigger(UnitQueueEvent::Ranged);
+                    commands.trigger(UnitQueueEvent(GameUnit::Ranged));
                 }
                 UnitButtons::Tank => {
-                    commands.trigger(UnitQueueEvent::Tank);
+                    commands.trigger(UnitQueueEvent(GameUnit::Tank));
                 }
                 UnitButtons::Super => {
-                    commands.trigger(UnitQueueEvent::Super);
+                    commands.trigger(UnitQueueEvent(GameUnit::Super));
                 }
             }
         }

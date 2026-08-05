@@ -57,30 +57,18 @@ fn spawn_camera(mut commands: Commands) {
 fn timer_finished(
     _timer: On<QueueTimerFinishedEvent>,
     mut commands: Commands,
-    mut queue: Query<&mut QueueEntry>,
+    mut queue: ResMut<EntityQueue>,
+    // mut queue: Query<&mut QueueEntry>,
     mut timer_query: Query<&mut QueueTimer>,
 ) {
-    let mut queue_iter = queue.iter_mut();
-    while let Some(mut item) = queue_iter.next() {
-        let unit = match item.0 {
-            Some(unit) => UnitSpawnEvent(unit),
-            None => continue,
-        };
-        item.0 = None;
-        commands.trigger(unit);
-        break;
-    }
+    let entry = queue.get_and_clear_last().unwrap();
+    commands.trigger(UnitSpawnEvent(entry));
 
     // progress the next one
     for mut bar in timer_query.iter_mut() {
         bar.unit = None;
-        while let Some(item) = queue_iter.next() {
-            match item.0 {
-                Some(unit) => {
-                    bar.set_unit(unit);
-                }
-                None => continue,
-            };
+        if let Some(entry) = *queue.get_last() {
+            bar.set_unit(entry);
         }
     }
 }

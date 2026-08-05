@@ -3,12 +3,7 @@ use bevy::prelude::*;
 use crate::game_unit::GameUnit;
 
 #[derive(Event, Debug)]
-pub enum UnitQueueEvent {
-    Meele,
-    Ranged,
-    Tank,
-    Super,
-}
+pub struct UnitQueueEvent(pub GameUnit);
 
 #[derive(Event, Deref)]
 pub struct UnitSpawnEvent(pub GameUnit);
