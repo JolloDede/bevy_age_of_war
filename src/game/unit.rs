@@ -32,6 +32,12 @@ pub fn unit_spawn_observer(spawn_event: On<UnitSpawnEvent>, mut commands: Comman
             GROUND_Y + (UNIT_SIZE.y * 0.5),
             1.0,
         ),
+        Text2d::new(match unit {
+            GameUnit::Meele => "M",
+            GameUnit::Ranged => "R",
+            GameUnit::Tank => "T",
+            GameUnit::Super => "S",
+        }),
         Intersects::default(),
         UnitComp(unit),
     ));
