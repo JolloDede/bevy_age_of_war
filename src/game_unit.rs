@@ -5,12 +5,3 @@ pub enum GameUnit {
     Tank,
     Super,
 }
-
-#[derive(Clone, Copy, PartialEq)]
-pub enum QueueUnit {
-    None,
-    Meele,
-    Ranged,
-    Tank,
-    Super,
-}

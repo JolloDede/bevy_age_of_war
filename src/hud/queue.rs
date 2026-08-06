@@ -5,7 +5,7 @@ use bevy::{camera::visibility::RenderLayers, prelude::*};
 use crate::{
     consts::*,
     event::{QueueTimerFinishedEvent, UnitQueueEvent, UnitSpawnEvent},
-    game_unit::{GameUnit, QueueUnit},
+    game_unit::GameUnit,
     hud::progressbar::QueueTimer,
 };
 

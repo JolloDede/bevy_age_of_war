@@ -5,7 +5,7 @@ use bevy::{camera::visibility::RenderLayers, prelude::*};
 use crate::{
     consts::HUD_LAYER,
     event::{QueueTimerFinishedEvent, UnitQueueEvent, UnitSpawnEvent},
-    game_unit::{GameUnit, QueueUnit},
+    game_unit::GameUnit,
 };
 
 mod menu;
@@ -58,7 +58,6 @@ fn timer_finished(
     _timer: On<QueueTimerFinishedEvent>,
     mut commands: Commands,
     mut queue: ResMut<EntityQueue>,
-    // mut queue: Query<&mut QueueEntry>,
     mut timer_query: Query<&mut QueueTimer>,
 ) {
     let entry = queue.get_and_clear_last().unwrap();

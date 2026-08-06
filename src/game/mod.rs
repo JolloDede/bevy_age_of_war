@@ -1,38 +1,41 @@
 use bevy::{camera::visibility::RenderLayers, prelude::*};
 
-use crate::{consts::GAME_LAYER, event::UnitSpawnEvent};
+use crate::{consts::*, event::UnitSpawnEvent, game_unit::GameUnit};
+
+mod base;
+use base::*;
+mod unit;
+use unit::*;
 
 pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_camera);
-        app.add_systems(Startup, spawn_world);
-        app.add_systems(Startup, spawn_bases);
         app.add_systems(Update, move_camera);
 
+        app.add_systems(Startup, spawn_world);
+
+        app.add_systems(Startup, spawn_bases);
+
+        app.add_systems(Update, unit_movement_system);
+        app.add_systems(Update, unit_collision_system);
         app.add_observer(unit_spawn_observer);
     }
 }
-
-const LEVEL_WIDTH: f32 = 2000.0;
 
 #[derive(Component)]
 struct GameCamera;
 
 fn spawn_camera(mut commands: Commands) {
-    let start_x = -(LEVEL_WIDTH * 0.5);
-
     commands.spawn((
         Camera2d::default(),
-        Transform::from_xyz(start_x, 0.0, 1.0),
+        Transform::from_xyz(LEVEL_START, 0.0, 1.0),
         RenderLayers::layer(GAME_LAYER),
         GameCamera,
     ));
 }
 
-const GROUND_HEIGHT: f32 = 50.0;
-const GROUND_TRANSLATION: Vec3 = Vec3::new(0.0, -100.0, 0.0);
 fn spawn_world(mut commands: Commands) {
     // horizon
     commands
@@ -57,25 +60,20 @@ fn spawn_world(mut commands: Commands) {
         .insert(Transform::from_translation(GROUND_TRANSLATION));
 }
 
-#[derive(Component)]
-struct Base;
-
-const BASE_COLOR: Color = Color::linear_rgb(0.4, 0.4, 0.4);
-const BASE_SIZE: Vec2 = Vec2::new(80.0, 120.0);
-const GROUND_Y: f32 = GROUND_TRANSLATION.y + (GROUND_HEIGHT * 0.5);
 fn spawn_bases(mut commands: Commands) {
-    let left_x = -(LEVEL_WIDTH * 0.5) + (BASE_SIZE.x * 0.5);
-    let right_x = (LEVEL_WIDTH * 0.5) - (BASE_SIZE.x * 0.5);
+    let player_base_x = LEVEL_START + (BASE_SIZE.x * 0.5);
+    let enemy_base_x = LEVEL_END - (BASE_SIZE.x * 0.5);
     let base_y = GROUND_Y + (BASE_SIZE.y * 0.5);
 
     commands
         .spawn(Sprite::from_color(BASE_COLOR, BASE_SIZE))
-        .insert(Transform::from_xyz(left_x, base_y, 1.0))
-        .insert(Base);
+        .insert(Transform::from_xyz(player_base_x, base_y, 1.0))
+        .insert(Base::new());
     commands
         .spawn(Sprite::from_color(BASE_COLOR, BASE_SIZE))
-        .insert(Transform::from_xyz(right_x, base_y, 1.0))
-        .insert(Base);
+        .insert(Transform::from_xyz(enemy_base_x, base_y, 1.0))
+        .insert(Base::new())
+        .insert(Enemy);
 }
 
 fn move_camera(
@@ -97,12 +95,8 @@ fn move_camera(
         transform.translation.x -= speed * time.delta_secs();
     }
 
-    let min_x = -(LEVEL_WIDTH * 0.5) + camera_half_width;
-    let max_x = (LEVEL_WIDTH * 0.5) - camera_half_width;
+    let min_x = LEVEL_START + camera_half_width;
+    let max_x = LEVEL_END - camera_half_width;
 
     transform.translation.x = transform.translation.x.clamp(min_x, max_x);
-}
-
-fn unit_spawn_observer(spawn_event: On<UnitSpawnEvent>) {
-    info!("Unit Spawn Event fired");
 }
