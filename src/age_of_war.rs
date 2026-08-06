@@ -11,3 +11,12 @@ impl PluginGroup for AgeOfWarPlugins {
             .add(HudPlugin)
     }
 }
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum Age {
+    StoneAge,
+    Medival,
+    Renaissance,
+    Modern,
+    Future,
+}

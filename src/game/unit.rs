@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use bevy::{
     math::bounding::{Aabb2d, IntersectsVolume},
     prelude::*,
@@ -5,16 +7,16 @@ use bevy::{
 
 use crate::{
     consts::{LEVEL_END, LEVEL_START},
-    event::UnitSpawnEvent,
+    event::{BaseAdvanceAgeEvent, UnitSpawnEvent},
     game::{
         BASE_SIZE, GROUND_Y,
         base::{Base, Enemy},
     },
-    game_unit::GameUnit,
+    game_unit::{GameUnit, UnitType},
 };
 
 #[derive(Component, Deref)]
-pub struct UnitComp(pub GameUnit);
+pub struct UnitComp(pub Arc<GameUnit>);
 
 const UNIT_SIZE: Vec2 = Vec2::new(20.0, 20.0);
 
@@ -23,7 +25,7 @@ pub fn unit_spawn_observer(spawn_event: On<UnitSpawnEvent>, mut commands: Comman
 
     const UNIT_COLOR: Color = Color::linear_rgb(1.0, 0.0, 1.0);
 
-    let unit = spawn_event.0;
+    let unit = spawn_event.0.clone();
 
     commands.spawn((
         Sprite::from_color(UNIT_COLOR, UNIT_SIZE),
@@ -32,11 +34,11 @@ pub fn unit_spawn_observer(spawn_event: On<UnitSpawnEvent>, mut commands: Comman
             GROUND_Y + (UNIT_SIZE.y * 0.5),
             1.0,
         ),
-        Text2d::new(match unit {
-            GameUnit::Meele => "M",
-            GameUnit::Ranged => "R",
-            GameUnit::Tank => "T",
-            GameUnit::Super => "S",
+        Text2d::new(match unit.r#type {
+            UnitType::Meele => "M",
+            UnitType::Ranged => "R",
+            UnitType::Tank => "T",
+            UnitType::Super => "S",
         }),
         Intersects::default(),
         UnitComp(unit),
@@ -92,4 +94,8 @@ pub fn unit_collision_system(
             intersects.0 = true;
         }
     }
+}
+
+pub fn advance_age_observer(advance_event: On<BaseAdvanceAgeEvent>) {
+    debug!("Advance age event");
 }

@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::{collections::VecDeque, sync::Arc};
 
 use bevy::{camera::visibility::RenderLayers, prelude::*};
 
@@ -28,28 +28,29 @@ impl EntityQueue {
 
         for entry in self.0.iter().rev() {
             if entry.0.is_some() {
-                return *entry;
+                return QueueEntry(entry.0.clone());
             }
         }
 
-        return *res;
+        return QueueEntry(res.0.clone());
     }
 
     pub fn get_and_clear_last(&mut self) -> QueueEntry {
         for entry in self.0.iter_mut().rev() {
             if entry.0.is_some() {
-                let res = entry.clone();
-                entry.0 = None;
-                return res;
+                // let res = entry.clone();
+                // entry.0 = None;
+                return QueueEntry(entry.0.take());
             }
         }
 
-        panic!("Failed to get and clear last element of EntityQueue");
+        error!("Failed to get and clear last element of EntityQueue");
+        QueueEntry(None)
     }
 }
 
-#[derive(Component, Deref, Clone, Copy)]
-pub struct QueueEntry(pub Option<GameUnit>);
+#[derive(Component, Deref)]
+pub struct QueueEntry(pub Option<Arc<GameUnit>>);
 
 impl QueueEntry {
     pub fn new() -> Self {
@@ -129,11 +130,11 @@ pub fn unit_queue_observer(
 ) {
     debug!("Triggered UnitQueueEvent with: {:?}", unit.event());
 
-    queue.0.push_front(QueueEntry(Some(unit.0)));
+    queue.0.push_front(QueueEntry(Some(unit.0.clone())));
 
     for mut progress in progress_query.iter_mut() {
         if progress.unit.is_none() {
-            let unit = queue.get_last().unwrap();
+            let unit = queue.get_last().0.unwrap();
             progress.set_unit(unit);
         }
     }

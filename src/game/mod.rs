@@ -17,6 +17,7 @@ impl Plugin for GamePlugin {
         app.add_systems(Startup, spawn_world);
 
         app.add_systems(Startup, spawn_bases);
+        app.add_observer(advance_age_observer);
 
         app.add_systems(Update, unit_movement_system);
         app.add_systems(Update, unit_collision_system);

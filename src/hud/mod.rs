@@ -1,10 +1,11 @@
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use bevy::{camera::visibility::RenderLayers, prelude::*};
 
 use crate::{
+    age_of_war::Age,
     consts::HUD_LAYER,
-    event::{QueueTimerFinishedEvent, UnitQueueEvent, UnitSpawnEvent},
+    event::{BaseAdvanceAgeEvent, QueueTimerFinishedEvent, UnitQueueEvent, UnitSpawnEvent},
     game_unit::GameUnit,
 };
 
@@ -20,6 +21,7 @@ pub struct HudPlugin;
 impl Plugin for HudPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_camera);
+
         app.add_systems(Startup, setup_buttons);
         app.add_systems(Update, menu_navigation_button_system);
         app.add_systems(Update, main_button_system);
@@ -35,7 +37,10 @@ impl Plugin for HudPlugin {
 
         app.add_observer(timer_finished);
 
+        app.add_observer(advance_age_observer);
+
         app.insert_resource(EntityQueue::default());
+        app.insert_resource(BaseAge::default());
     }
 }
 
@@ -60,14 +65,35 @@ fn timer_finished(
     mut queue: ResMut<EntityQueue>,
     mut timer_query: Query<&mut QueueTimer>,
 ) {
-    let entry = queue.get_and_clear_last().unwrap();
+    let entry = queue.get_and_clear_last().0.unwrap();
     commands.trigger(UnitSpawnEvent(entry));
 
     // progress the next one
     for mut bar in timer_query.iter_mut() {
         bar.unit = None;
-        if let Some(entry) = *queue.get_last() {
+        if let Some(entry) = queue.get_last().0 {
             bar.set_unit(entry);
         }
+    }
+}
+
+#[derive(Resource, Deref)]
+pub struct BaseAge(Age);
+
+impl Default for BaseAge {
+    fn default() -> Self {
+        Self(Age::StoneAge)
+    }
+}
+
+pub fn advance_age_observer(_advance_event: On<BaseAdvanceAgeEvent>, mut age: ResMut<BaseAge>) {
+    debug!("Advance age event");
+
+    match age.0 {
+        Age::StoneAge => age.0 = Age::Medival,
+        Age::Medival => age.0 = Age::Renaissance,
+        Age::Renaissance => age.0 = Age::Modern,
+        Age::Modern => age.0 = Age::Future,
+        Age::Future => debug!("Already reached the last age"),
     }
 }

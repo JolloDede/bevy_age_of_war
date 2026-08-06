@@ -1,12 +1,17 @@
+use std::sync::Arc;
+
 use bevy::prelude::*;
 
 use crate::game_unit::GameUnit;
 
 #[derive(Event, Debug)]
-pub struct UnitQueueEvent(pub GameUnit);
+pub struct UnitQueueEvent(pub Arc<GameUnit>);
 
 #[derive(Event, Deref)]
-pub struct UnitSpawnEvent(pub GameUnit);
+pub struct UnitSpawnEvent(pub Arc<GameUnit>);
 
 #[derive(Event)]
 pub struct QueueTimerFinishedEvent;
+
+#[derive(Event)]
+pub struct BaseAdvanceAgeEvent;

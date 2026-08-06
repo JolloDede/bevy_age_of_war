@@ -1,6 +1,13 @@
+use std::sync::Arc;
+
 use bevy::{camera::visibility::RenderLayers, prelude::*};
 
-use crate::{consts::HUD_LAYER, event::UnitQueueEvent, game_unit::GameUnit};
+use crate::{
+    consts::HUD_LAYER,
+    event::{BaseAdvanceAgeEvent, UnitQueueEvent},
+    game_unit::{GameUnit, UnitType},
+    hud::BaseAge,
+};
 
 const ACTION_BUTTON_WIDTH: i32 = 60;
 const ACTION_BUTTON_HEIGHT: i32 = 60;
@@ -28,12 +35,7 @@ pub enum MenuActionButton {
 }
 
 #[derive(Component)]
-pub enum UnitButtons {
-    Meele,
-    Ranged,
-    Tank,
-    Super,
-}
+pub struct UnitButtons(UnitType);
 
 #[derive(Component)]
 pub enum TurretButtons {
@@ -170,7 +172,7 @@ pub fn setup_buttons(mut commands: Commands) {
                 .with_children(|row| {
                     row.spawn((
                         default_node.clone(),
-                        UnitButtons::Meele,
+                        UnitButtons(UnitType::Meele),
                         Button,
                         BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
                         children![(
@@ -184,7 +186,7 @@ pub fn setup_buttons(mut commands: Commands) {
                     ));
                     row.spawn((
                         default_node.clone(),
-                        UnitButtons::Ranged,
+                        UnitButtons(UnitType::Ranged),
                         Button,
                         BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
                         children![(
@@ -198,7 +200,7 @@ pub fn setup_buttons(mut commands: Commands) {
                     ));
                     row.spawn((
                         default_node.clone(),
-                        UnitButtons::Tank,
+                        UnitButtons(UnitType::Tank),
                         Button,
                         BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
                         children![(
@@ -212,7 +214,7 @@ pub fn setup_buttons(mut commands: Commands) {
                     ));
                     row.spawn((
                         default_node.clone(),
-                        UnitButtons::Super,
+                        UnitButtons(UnitType::Super),
                         Button,
                         BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
                         children![(
@@ -358,6 +360,7 @@ pub fn menu_navigation_button_system(
 }
 
 pub fn main_button_system(
+    mut commands: Commands,
     action_query: Query<(&Interaction, &MenuActionButton), (Changed<Interaction>, With<Button>)>,
 ) {
     for (interaction, action) in action_query.iter() {
@@ -370,7 +373,7 @@ pub fn main_button_system(
                     println!("Upgrade base")
                 }
                 MenuActionButton::AdvanceAge => {
-                    println!("advance age")
+                    commands.trigger(BaseAdvanceAgeEvent);
                 }
             }
         }
@@ -380,23 +383,13 @@ pub fn main_button_system(
 pub fn unit_button_system(
     mut commands: Commands,
     action_query: Query<(&Interaction, &UnitButtons), (Changed<Interaction>, With<Button>)>,
+    base_age: Res<BaseAge>,
 ) {
     for (interaction, action) in action_query.iter() {
         if *interaction == Interaction::Pressed {
-            match action {
-                UnitButtons::Meele => {
-                    commands.trigger(UnitQueueEvent(GameUnit::Meele));
-                }
-                UnitButtons::Ranged => {
-                    commands.trigger(UnitQueueEvent(GameUnit::Ranged));
-                }
-                UnitButtons::Tank => {
-                    commands.trigger(UnitQueueEvent(GameUnit::Tank));
-                }
-                UnitButtons::Super => {
-                    commands.trigger(UnitQueueEvent(GameUnit::Super));
-                }
-            }
+            commands.trigger(UnitQueueEvent(Arc::new(GameUnit::new(
+                base_age.0, action.0,
+            ))));
         }
     }
 }

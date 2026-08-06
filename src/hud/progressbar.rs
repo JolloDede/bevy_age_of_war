@@ -1,26 +1,26 @@
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use bevy::prelude::*;
 
 use crate::{
     consts::{QUEUE_MARGIN_LEFT, QUEUE_MARGIN_TOP, QUEUE_RECT_HEIGHT},
     event::{QueueTimerFinishedEvent, UnitQueueEvent, UnitSpawnEvent},
-    game_unit::GameUnit,
+    game_unit::{GameUnit, UnitType},
 };
 
 #[derive(Component)]
 pub struct QueueTimer {
     pub timer: Timer,
-    pub unit: Option<GameUnit>,
+    pub unit: Option<Arc<GameUnit>>,
 }
 
 impl QueueTimer {
-    pub fn set_unit(&mut self, unit: GameUnit) {
-        self.timer.set_duration(match unit {
-            GameUnit::Meele => Duration::from_secs(2),
-            GameUnit::Ranged => Duration::from_secs(4),
-            GameUnit::Tank => Duration::from_secs(6),
-            GameUnit::Super => Duration::from_secs(8),
+    pub fn set_unit(&mut self, unit: Arc<GameUnit>) {
+        self.timer.set_duration(match unit.r#type {
+            UnitType::Meele => Duration::from_secs(2),
+            UnitType::Ranged => Duration::from_secs(4),
+            UnitType::Tank => Duration::from_secs(6),
+            UnitType::Super => Duration::from_secs(8),
         });
         self.timer.reset();
         self.unit = Some(unit);
