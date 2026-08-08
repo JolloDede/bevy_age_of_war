@@ -385,10 +385,11 @@ pub fn unit_button_system(
     action_query: Query<(&Interaction, &UnitButtons), (Changed<Interaction>, With<Button>)>,
     base_age: Res<BaseAge>,
 ) {
-    for (interaction, action) in action_query.iter() {
+    for (interaction, unit_button) in action_query.iter() {
         if *interaction == Interaction::Pressed {
             commands.trigger(UnitQueueEvent(Arc::new(GameUnit::new(
-                base_age.0, action.0,
+                base_age.0,
+                unit_button.0,
             ))));
         }
     }
