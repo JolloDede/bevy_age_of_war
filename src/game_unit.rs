@@ -1,3 +1,8 @@
+use rand::{
+    RngExt,
+    distr::{Distribution, StandardUniform},
+};
+
 use crate::age_of_war::Age;
 
 #[derive(Debug, PartialEq)]
@@ -29,4 +34,15 @@ pub enum UnitType {
     Ranged,
     Tank,
     Super,
+}
+
+impl Distribution<UnitType> for StandardUniform {
+    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> UnitType {
+        match rng.random_range(0..4) {
+            0 => UnitType::Meele,
+            1 => UnitType::Ranged,
+            2 => UnitType::Tank,
+            _ => UnitType::Super,
+        }
+    }
 }
