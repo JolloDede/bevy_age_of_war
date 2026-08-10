@@ -99,3 +99,15 @@ pub fn unit_collision_system(
 pub fn advance_age_observer(advance_event: On<BaseAdvanceAgeEvent>) {
     debug!("Advance age event");
 }
+
+pub fn draw_attack_ranges(units: Query<(&Transform, &UnitComp)>, mut gizmos: Gizmos) {
+    for (transform, unit) in &units {
+        let position = transform.translation.truncate();
+        // Draws a red circle outline matching the attack radius
+        gizmos.circle_2d(
+            position,
+            unit.range * UNIT_SIZE.x,
+            Color::srgb(1.0, 0.0, 0.0),
+        );
+    }
+}
