@@ -6,6 +6,10 @@ mod base;
 use base::*;
 mod unit;
 use unit::*;
+mod combat;
+use combat::*;
+mod health_bar;
+use health_bar::*;
 
 pub struct GamePlugin;
 
@@ -16,6 +20,8 @@ impl Plugin for GamePlugin {
 
         app.add_systems(Startup, spawn_world);
 
+        app.add_systems(Update, display_health_system);
+
         app.add_systems(Startup, spawn_bases);
         app.add_systems(Update, enemy_base_spawn_unit);
         app.add_observer(advance_age_observer);
@@ -23,7 +29,7 @@ impl Plugin for GamePlugin {
         app.add_systems(Update, unit_movement_system);
         app.add_systems(Update, unit_collision_system);
         app.add_systems(Update, combat_system);
-        app.add_systems(Update, draw_attack_ranges);
+        app.add_systems(Update, draw_attack_ranges.after(unit_movement_system));
         app.add_systems(Update, base_collision_system);
         app.add_observer(unit_spawn_observer);
     }
@@ -88,4 +94,10 @@ fn move_camera(
     let max_x = LEVEL_END - camera_half_width;
 
     transform.translation.x = transform.translation.x.clamp(min_x, max_x);
+}
+
+pub fn display_health_system(health_query: Query<(&Transform, &Health)>) {
+    for (trans, health) in health_query.iter() {
+        let position = trans.translation.truncate();
+    }
 }

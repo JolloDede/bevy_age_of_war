@@ -11,6 +11,7 @@ use crate::{
     game::{
         BASE_SIZE, GROUND_Y,
         base::{Base, Enemy},
+        combat::{AttackDamange, AttackRange},
     },
     game_unit::{GameUnit, UnitType},
 };
@@ -19,7 +20,20 @@ use crate::{
 pub struct UnitComp(pub Arc<GameUnit>);
 
 #[derive(Component, Deref)]
-pub struct AttackCooldown(Timer);
+pub struct Health(pub i32);
+
+impl From<UnitType> for Health {
+    fn from(value: UnitType) -> Self {
+        let hp = match value {
+            UnitType::Meele => 40,
+            UnitType::Ranged => 20,
+            UnitType::Tank => 80,
+            UnitType::Super => 160,
+        };
+
+        Self(hp)
+    }
+}
 
 pub fn unit_spawn_observer(spawn_event: On<UnitSpawnEvent>, mut commands: Commands) {
     debug!("Unit Spawn Event fired");
@@ -95,7 +109,18 @@ pub fn base_collision_system(
     }
 }
 
-pub fn new_unit_comp(unit: Arc<GameUnit>) -> (Sprite, Transform, Text2d, Intersects, UnitComp) {
+pub fn new_unit_comp(
+    unit: Arc<GameUnit>,
+) -> (
+    Sprite,
+    Transform,
+    Text2d,
+    Intersects,
+    AttackRange,
+    AttackDamange,
+    Health,
+    UnitComp,
+) {
     let x_pos = LEVEL_START + BASE_SIZE.x + (UNIT_SIZE.x * 0.5) + 1.;
 
     (
@@ -108,39 +133,41 @@ pub fn new_unit_comp(unit: Arc<GameUnit>) -> (Sprite, Transform, Text2d, Interse
             UnitType::Super => "S",
         }),
         Intersects::default(),
+        AttackRange::from(unit.r#type),
+        AttackDamange::new(unit.level, unit.r#type),
+        Health::from(unit.r#type),
         UnitComp(unit),
     )
 }
 
 pub fn new_enemy_unit_comp(
     unit: Arc<GameUnit>,
-) -> (Sprite, Transform, Text2d, Intersects, UnitComp, Enemy) {
+) -> (
+    Sprite,
+    Transform,
+    Text2d,
+    Intersects,
+    AttackRange,
+    AttackDamange,
+    Health,
+    UnitComp,
+    Enemy,
+) {
     let xpos = LEVEL_END - BASE_SIZE.x - (UNIT_SIZE.x * 0.5) - 1.;
-    let (sprite, mut trans, text, intersect, unit) = new_unit_comp(unit);
+    let (sprite, mut trans, text, intersect, attack_range, attack_damage, health, unit) =
+        new_unit_comp(unit);
 
     trans.translation.x = xpos;
 
-    (sprite, trans, text, intersect, unit, Enemy)
-}
-
-pub fn draw_attack_ranges(units: Query<(&Transform, &UnitComp)>, mut gizmos: Gizmos) {
-    for (transform, unit) in &units {
-        let position = transform.translation.truncate();
-
-        gizmos.circle_2d(
-            position,
-            unit.range * UNIT_SIZE.x,
-            Color::srgb(1.0, 0.0, 0.0),
-        );
-    }
-}
-
-pub fn combat_system(time: Res<Time>, mut unit_query: Query<(&UnitComp, &mut AttackCooldown)>) {
-    for (unit, mut cooldown) in unit_query.iter_mut() {
-        cooldown.0.tick(time.delta());
-
-        if !cooldown.is_finished() {
-            continue;
-        }
-    }
+    (
+        sprite,
+        trans,
+        text,
+        intersect,
+        attack_range,
+        attack_damage,
+        health,
+        unit,
+        Enemy,
+    )
 }

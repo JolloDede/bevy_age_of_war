@@ -6,7 +6,7 @@ use crate::{
     age_of_war::Age,
     consts::*,
     event::BaseAdvanceAgeEvent,
-    game::unit::{new_enemy_unit_comp, new_unit_comp},
+    game::unit::{Health, new_enemy_unit_comp, new_unit_comp},
     game_unit::{GameUnit, UnitType},
 };
 
@@ -36,19 +36,21 @@ pub fn spawn_bases(mut commands: Commands) {
     let enemy_base_x = LEVEL_END - (BASE_SIZE.x * 0.5);
     let base_y = GROUND_Y + (BASE_SIZE.y * 0.5);
 
-    commands
-        .spawn(Sprite::from_color(BASE_COLOR, BASE_SIZE))
-        .insert(Transform::from_xyz(player_base_x, base_y, 1.0))
-        .insert(Base::new());
-    commands
-        .spawn(Sprite::from_color(BASE_COLOR, BASE_SIZE))
-        .insert(Transform::from_xyz(enemy_base_x, base_y, 1.0))
-        .insert(Base::new())
-        .insert(Enemy)
-        .insert(EnemyBaseQueueTimer(Timer::from_seconds(
-            4.,
-            TimerMode::Repeating,
-        )));
+    commands.spawn((
+        Sprite::from_color(BASE_COLOR, BASE_SIZE),
+        Transform::from_xyz(player_base_x, base_y, 1.0),
+        Base::new(),
+        Health(UNIT_BASE_HEALTH),
+    ));
+
+    commands.spawn((
+        Sprite::from_color(BASE_COLOR, BASE_SIZE),
+        Transform::from_xyz(enemy_base_x, base_y, 1.0),
+        Base::new(),
+        Enemy,
+        EnemyBaseQueueTimer(Timer::from_seconds(4., TimerMode::Repeating)),
+        Health(UNIT_BASE_HEALTH),
+    ));
 }
 
 pub fn advance_age_observer(advance_event: On<BaseAdvanceAgeEvent>) {
