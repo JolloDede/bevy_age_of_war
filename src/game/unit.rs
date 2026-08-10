@@ -18,6 +18,9 @@ use crate::{
 #[derive(Component, Deref)]
 pub struct UnitComp(pub Arc<GameUnit>);
 
+#[derive(Component, Deref)]
+pub struct AttackCooldown(Timer);
+
 pub fn unit_spawn_observer(spawn_event: On<UnitSpawnEvent>, mut commands: Commands) {
     debug!("Unit Spawn Event fired");
 
@@ -93,7 +96,7 @@ pub fn base_collision_system(
 }
 
 pub fn new_unit_comp(unit: Arc<GameUnit>) -> (Sprite, Transform, Text2d, Intersects, UnitComp) {
-    let x_pos = LEVEL_START + BASE_SIZE.x + (UNIT_SIZE.x * 0.5);
+    let x_pos = LEVEL_START + BASE_SIZE.x + (UNIT_SIZE.x * 0.5) + 1.;
 
     (
         Sprite::from_color(UNIT_COLOR, UNIT_SIZE),
@@ -112,7 +115,7 @@ pub fn new_unit_comp(unit: Arc<GameUnit>) -> (Sprite, Transform, Text2d, Interse
 pub fn new_enemy_unit_comp(
     unit: Arc<GameUnit>,
 ) -> (Sprite, Transform, Text2d, Intersects, UnitComp, Enemy) {
-    let xpos = LEVEL_END - BASE_SIZE.x - (UNIT_SIZE.x * 0.5);
+    let xpos = LEVEL_END - BASE_SIZE.x - (UNIT_SIZE.x * 0.5) - 1.;
     let (sprite, mut trans, text, intersect, unit) = new_unit_comp(unit);
 
     trans.translation.x = xpos;
@@ -123,11 +126,21 @@ pub fn new_enemy_unit_comp(
 pub fn draw_attack_ranges(units: Query<(&Transform, &UnitComp)>, mut gizmos: Gizmos) {
     for (transform, unit) in &units {
         let position = transform.translation.truncate();
-        // Draws a red circle outline matching the attack radius
+
         gizmos.circle_2d(
             position,
             unit.range * UNIT_SIZE.x,
             Color::srgb(1.0, 0.0, 0.0),
         );
+    }
+}
+
+pub fn combat_system(time: Res<Time>, mut unit_query: Query<(&UnitComp, &mut AttackCooldown)>) {
+    for (unit, mut cooldown) in unit_query.iter_mut() {
+        cooldown.0.tick(time.delta());
+
+        if !cooldown.is_finished() {
+            continue;
+        }
     }
 }

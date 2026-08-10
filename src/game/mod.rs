@@ -22,7 +22,7 @@ impl Plugin for GamePlugin {
 
         app.add_systems(Update, unit_movement_system);
         app.add_systems(Update, unit_collision_system);
-        // app.add_systems(Update, unit_range_system);
+        app.add_systems(Update, combat_system);
         app.add_systems(Update, draw_attack_ranges);
         app.add_systems(Update, base_collision_system);
         app.add_observer(unit_spawn_observer);
