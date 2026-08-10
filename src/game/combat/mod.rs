@@ -8,7 +8,7 @@ use crate::{
 };
 
 #[derive(Component, Deref)]
-pub struct AttackCooldown(Timer);
+pub struct AttackCooldown(pub Timer);
 
 #[derive(Component, Deref)]
 pub struct AttackRange(f32);
@@ -25,7 +25,7 @@ impl From<UnitType> for AttackRange {
             UnitType::Super => 3.,
         };
 
-        range *= UNIT_SIZE.x;
+        range *= UNIT_SIZE.x * 2.;
 
         Self(range)
     }
@@ -60,6 +60,7 @@ pub fn draw_attack_ranges(units: Query<(&Transform, &AttackRange)>, mut gizmos: 
 }
 
 pub fn combat_system(
+    mut commands: Commands,
     time: Res<Time>,
     mut attacker_query: Query<(
         &Transform,
@@ -68,9 +69,10 @@ pub fn combat_system(
         &mut AttackCooldown,
         Entity,
     )>,
-    attacked_unit: Query<(Entity, &Transform), With<Health>>,
+    attacked_unit: Query<(Entity, &Transform), With<UnitComp>>,
     enemy_query: Query<&Enemy>,
-    mut health: Query<&mut Health>,
+    health_parent_query: Query<(&Children)>,
+    mut health_query: Query<&mut Health>,
 ) {
     for (attacker_trans, attacker_range, attacker_damage, mut cooldown, entity) in
         attacker_query.iter_mut()
@@ -86,30 +88,38 @@ pub fn combat_system(
         let attacker_is_enemy = enemy_query.get(entity).is_ok();
 
         let mut nearest_enemy: Option<(Entity, f32)> = None;
-        for (enemy_entity, enemy_trans) in attacked_unit.iter() {
-            let is_enemy = enemy_query.get(enemy_entity).is_ok();
+        for (attacked_entity, attacked_trans) in attacked_unit.iter() {
+            let is_enemy = enemy_query.get(attacked_entity).is_ok();
             if attacker_is_enemy == is_enemy {
                 continue;
             }
 
-            let enemy_pos = enemy_trans.translation.truncate();
-            let distance_squared = attacker_pos.distance_squared(enemy_pos);
+            let attacked_pos = attacked_trans.translation.truncate();
+            let distance_squared = attacker_pos.distance_squared(attacked_pos);
+            debug!(range_squared, distance_squared);
             if distance_squared <= range_squared {
                 if let Some((_, nearest_distance)) = nearest_enemy {
                     if distance_squared < nearest_distance {
-                        nearest_enemy = Some((enemy_entity, distance_squared));
+                        nearest_enemy = Some((attacked_entity, distance_squared));
                     }
                 } else {
-                    nearest_enemy = Some((enemy_entity, distance_squared));
+                    nearest_enemy = Some((attacked_entity, distance_squared));
                 }
             }
         }
 
         if let Some((target_entity, _)) = nearest_enemy {
-            if let Ok(mut health) = health.get_mut(target_entity) {
-                health.0 -= attacker_damage.0;
-                cooldown.0.reset();
-                debug!("Attacked! remaining health: {}", health.0);
+            let children = health_parent_query.get(target_entity).unwrap();
+            for &child in children {
+                if let Ok(mut health) = health_query.get_mut(child) {
+                    health.0 -= attacker_damage.0;
+                    if health.0 <= 0 {
+                        info!("Killed a unit");
+                        commands.entity(target_entity).despawn();
+                    }
+                    cooldown.0.reset();
+                    debug!("Attacked! remaining health: {}", health.0);
+                }
             }
         }
     }

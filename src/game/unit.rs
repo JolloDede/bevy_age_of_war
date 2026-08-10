@@ -11,7 +11,7 @@ use crate::{
     game::{
         BASE_SIZE, GROUND_Y,
         base::{Base, Enemy},
-        combat::{AttackDamange, AttackRange},
+        combat::{AttackCooldown, AttackDamange, AttackRange},
         health_bar::{Health, health_bar_node},
     },
     game_unit::{GameUnit, UnitType},
@@ -101,7 +101,7 @@ pub fn new_unit_comp(commands: &mut Commands, unit: Arc<GameUnit>, is_enemy: boo
         LEVEL_START + BASE_SIZE.x + (UNIT_SIZE.x * 0.5) + 1.
     };
 
-    let mut bla = commands.spawn((
+    let mut unit_bundle = commands.spawn((
         Sprite::from_color(UNIT_COLOR, UNIT_SIZE),
         Transform::from_xyz(x_pos, GROUND_Y + (UNIT_SIZE.y * 0.5), 1.0),
         Text2d::new(match unit.r#type {
@@ -113,13 +113,14 @@ pub fn new_unit_comp(commands: &mut Commands, unit: Arc<GameUnit>, is_enemy: boo
         Intersects::default(),
         AttackRange::from(unit.r#type),
         AttackDamange::new(unit.level, unit.r#type),
+        AttackCooldown(Timer::from_seconds(1., TimerMode::Once)),
         UnitComp(unit.clone()),
     ));
     if is_enemy {
-        bla.insert(Enemy);
+        unit_bundle.insert(Enemy);
     }
 
-    bla.with_children(|parent| {
+    unit_bundle.with_children(|parent| {
         health_bar_node(parent, Health::from(unit.r#type), false);
     });
 }
