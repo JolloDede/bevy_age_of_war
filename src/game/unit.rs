@@ -12,6 +12,7 @@ use crate::{
         BASE_SIZE, GROUND_Y,
         base::{Base, Enemy},
         combat::{AttackDamange, AttackRange},
+        health_bar::{Health, health_bar_node},
     },
     game_unit::{GameUnit, UnitType},
 };
@@ -19,28 +20,12 @@ use crate::{
 #[derive(Component, Deref)]
 pub struct UnitComp(pub Arc<GameUnit>);
 
-#[derive(Component, Deref)]
-pub struct Health(pub i32);
-
-impl From<UnitType> for Health {
-    fn from(value: UnitType) -> Self {
-        let hp = match value {
-            UnitType::Meele => 40,
-            UnitType::Ranged => 20,
-            UnitType::Tank => 80,
-            UnitType::Super => 160,
-        };
-
-        Self(hp)
-    }
-}
-
 pub fn unit_spawn_observer(spawn_event: On<UnitSpawnEvent>, mut commands: Commands) {
     debug!("Unit Spawn Event fired");
 
     let unit = spawn_event.0.clone();
 
-    commands.spawn(new_unit_comp(unit));
+    new_unit_comp(&mut commands, unit, false);
 }
 
 const UNIT_SPEED: f32 = 6.0;
@@ -109,21 +94,14 @@ pub fn base_collision_system(
     }
 }
 
-pub fn new_unit_comp(
-    unit: Arc<GameUnit>,
-) -> (
-    Sprite,
-    Transform,
-    Text2d,
-    Intersects,
-    AttackRange,
-    AttackDamange,
-    Health,
-    UnitComp,
-) {
-    let x_pos = LEVEL_START + BASE_SIZE.x + (UNIT_SIZE.x * 0.5) + 1.;
+pub fn new_unit_comp(commands: &mut Commands, unit: Arc<GameUnit>, is_enemy: bool) {
+    let x_pos = if is_enemy {
+        LEVEL_END - BASE_SIZE.x - (UNIT_SIZE.x * 0.5) - 1.
+    } else {
+        LEVEL_START + BASE_SIZE.x + (UNIT_SIZE.x * 0.5) + 1.
+    };
 
-    (
+    let mut bla = commands.spawn((
         Sprite::from_color(UNIT_COLOR, UNIT_SIZE),
         Transform::from_xyz(x_pos, GROUND_Y + (UNIT_SIZE.y * 0.5), 1.0),
         Text2d::new(match unit.r#type {
@@ -135,39 +113,13 @@ pub fn new_unit_comp(
         Intersects::default(),
         AttackRange::from(unit.r#type),
         AttackDamange::new(unit.level, unit.r#type),
-        Health::from(unit.r#type),
-        UnitComp(unit),
-    )
-}
+        UnitComp(unit.clone()),
+    ));
+    if is_enemy {
+        bla.insert(Enemy);
+    }
 
-pub fn new_enemy_unit_comp(
-    unit: Arc<GameUnit>,
-) -> (
-    Sprite,
-    Transform,
-    Text2d,
-    Intersects,
-    AttackRange,
-    AttackDamange,
-    Health,
-    UnitComp,
-    Enemy,
-) {
-    let xpos = LEVEL_END - BASE_SIZE.x - (UNIT_SIZE.x * 0.5) - 1.;
-    let (sprite, mut trans, text, intersect, attack_range, attack_damage, health, unit) =
-        new_unit_comp(unit);
-
-    trans.translation.x = xpos;
-
-    (
-        sprite,
-        trans,
-        text,
-        intersect,
-        attack_range,
-        attack_damage,
-        health,
-        unit,
-        Enemy,
-    )
+    bla.with_children(|parent| {
+        health_bar_node(parent, Health::from(unit.r#type), false);
+    });
 }

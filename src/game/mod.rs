@@ -20,7 +20,7 @@ impl Plugin for GamePlugin {
 
         app.add_systems(Startup, spawn_world);
 
-        app.add_systems(Update, display_health_system);
+        app.add_systems(Update, health_system);
 
         app.add_systems(Startup, spawn_bases);
         app.add_systems(Update, enemy_base_spawn_unit);
@@ -96,8 +96,15 @@ fn move_camera(
     transform.translation.x = transform.translation.x.clamp(min_x, max_x);
 }
 
-pub fn display_health_system(health_query: Query<(&Transform, &Health)>) {
-    for (trans, health) in health_query.iter() {
-        let position = trans.translation.truncate();
+pub fn health_system(
+    parent_query: Query<(&Health, &MaxHealth, &Children)>,
+    mut health_query: Query<&mut Transform, With<HealthBarMarker>>,
+) {
+    for (health, max_health, children) in parent_query.iter() {
+        let health_frac = health.0 as f32 / max_health.0 as f32;
+        for child in children {
+            let mut item = health_query.get_mut(*child).unwrap();
+            item.scale.x = health_frac;
+        }
     }
 }

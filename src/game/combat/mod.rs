@@ -3,10 +3,7 @@ use bevy::{math::FloatPow, prelude::*};
 use crate::{
     age_of_war::Age,
     consts::*,
-    game::{
-        base::Enemy,
-        unit::{Health, UnitComp},
-    },
+    game::{base::Enemy, health_bar::Health, unit::UnitComp},
     game_unit::UnitType,
 };
 
