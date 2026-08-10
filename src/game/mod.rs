@@ -17,12 +17,14 @@ impl Plugin for GamePlugin {
         app.add_systems(Startup, spawn_world);
 
         app.add_systems(Startup, spawn_bases);
+        app.add_systems(Update, enemy_base_spawn_unit);
         app.add_observer(advance_age_observer);
 
         app.add_systems(Update, unit_movement_system);
         app.add_systems(Update, unit_collision_system);
         // app.add_systems(Update, unit_range_system);
         app.add_systems(Update, draw_attack_ranges);
+        app.add_systems(Update, base_collision_system);
         app.add_observer(unit_spawn_observer);
     }
 }
@@ -61,22 +63,6 @@ fn spawn_world(mut commands: Commands) {
             Vec2::new(LEVEL_WIDTH, GROUND_HEIGHT),
         ))
         .insert(Transform::from_translation(GROUND_TRANSLATION));
-}
-
-fn spawn_bases(mut commands: Commands) {
-    let player_base_x = LEVEL_START + (BASE_SIZE.x * 0.5);
-    let enemy_base_x = LEVEL_END - (BASE_SIZE.x * 0.5);
-    let base_y = GROUND_Y + (BASE_SIZE.y * 0.5);
-
-    commands
-        .spawn(Sprite::from_color(BASE_COLOR, BASE_SIZE))
-        .insert(Transform::from_xyz(player_base_x, base_y, 1.0))
-        .insert(Base::new());
-    commands
-        .spawn(Sprite::from_color(BASE_COLOR, BASE_SIZE))
-        .insert(Transform::from_xyz(enemy_base_x, base_y, 1.0))
-        .insert(Base::new())
-        .insert(Enemy);
 }
 
 fn move_camera(

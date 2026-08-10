@@ -23,3 +23,6 @@ pub const BASE_SIZE: Vec2 = Vec2::new(80.0, 120.0);
 pub const GROUND_Y: f32 = GROUND_TRANSLATION.y + (GROUND_HEIGHT * 0.5);
 pub const GROUND_HEIGHT: f32 = 50.0;
 pub const GROUND_TRANSLATION: Vec3 = Vec3::new(0.0, -100.0, 0.0);
+
+pub const UNIT_SIZE: Vec2 = Vec2::new(20.0, 20.0);
+pub const UNIT_COLOR: Color = Color::linear_rgb(1.0, 0.0, 1.0);
