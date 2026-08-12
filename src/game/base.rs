@@ -66,6 +66,7 @@ pub fn enemy_base_spawn_unit(
     mut commands: Commands,
     time: Res<Time>,
     base_query: Single<(&mut EnemyBaseQueueTimer, &Base), With<Enemy>>,
+    asset_server: Res<AssetServer>,
 ) {
     let (mut base_timer, base) = base_query.into_inner();
 
@@ -75,6 +76,6 @@ pub fn enemy_base_spawn_unit(
         let typ = rand::random();
         let unit = GameUnit::new(base.age, typ);
 
-        new_unit_comp(&mut commands, Arc::new(unit), true);
+        new_unit_comp(&mut commands, Arc::new(unit), true, asset_server);
     }
 }

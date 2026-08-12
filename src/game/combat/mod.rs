@@ -13,9 +13,6 @@ pub struct AttackCooldown(pub Timer);
 #[derive(Component, Deref)]
 pub struct AttackRange(f32);
 
-#[derive(Component, Deref)]
-pub struct AttackDamange(i32);
-
 impl From<UnitType> for AttackRange {
     fn from(value: UnitType) -> Self {
         let mut range = match value {
@@ -25,19 +22,22 @@ impl From<UnitType> for AttackRange {
             UnitType::Super => 3.,
         };
 
-        range *= UNIT_SIZE.x * 2.;
+        range *= UNIT_SIZE.x * 1.5;
 
         Self(range)
     }
 }
 
+#[derive(Component, Deref)]
+pub struct AttackDamange(i32);
+
 impl AttackDamange {
     pub fn new(age: Age, unit_type: UnitType) -> Self {
         let mut damage = match unit_type {
             UnitType::Meele => 10,
-            UnitType::Ranged => 20,
-            UnitType::Tank => 40,
-            UnitType::Super => 80,
+            UnitType::Ranged => 6,
+            UnitType::Tank => 20,
+            UnitType::Super => 40,
         };
         damage *= match age {
             Age::StoneAge => 1,

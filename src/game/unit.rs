@@ -15,17 +15,22 @@ use crate::{
         health_bar::{Health, health_bar_node},
     },
     game_unit::{GameUnit, UnitType},
+    resource_paths,
 };
 
 #[derive(Component, Deref)]
 pub struct UnitComp(pub Arc<GameUnit>);
 
-pub fn unit_spawn_observer(spawn_event: On<UnitSpawnEvent>, mut commands: Commands) {
+pub fn unit_spawn_observer(
+    spawn_event: On<UnitSpawnEvent>,
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+) {
     debug!("Unit Spawn Event fired");
 
     let unit = spawn_event.0.clone();
 
-    new_unit_comp(&mut commands, unit, false);
+    new_unit_comp(&mut commands, unit, false, asset_server);
 }
 
 const UNIT_SPEED: f32 = 6.0;
@@ -94,7 +99,12 @@ pub fn base_collision_system(
     }
 }
 
-pub fn new_unit_comp(commands: &mut Commands, unit: Arc<GameUnit>, is_enemy: bool) {
+pub fn new_unit_comp(
+    commands: &mut Commands,
+    unit: Arc<GameUnit>,
+    is_enemy: bool,
+    asset_server: Res<AssetServer>,
+) {
     let x_pos = if is_enemy {
         LEVEL_END - BASE_SIZE.x - (UNIT_SIZE.x * 0.5) - 1.
     } else {
@@ -102,14 +112,8 @@ pub fn new_unit_comp(commands: &mut Commands, unit: Arc<GameUnit>, is_enemy: boo
     };
 
     let mut unit_bundle = commands.spawn((
-        Sprite::from_color(UNIT_COLOR, UNIT_SIZE),
+        Sprite::from_image(asset_server.load(resource_paths::load_units(unit.level, unit.r#type))),
         Transform::from_xyz(x_pos, GROUND_Y + (UNIT_SIZE.y * 0.5), 1.0),
-        Text2d::new(match unit.r#type {
-            UnitType::Meele => "M",
-            UnitType::Ranged => "R",
-            UnitType::Tank => "T",
-            UnitType::Super => "S",
-        }),
         Intersects::default(),
         AttackRange::from(unit.r#type),
         AttackDamange::new(unit.level, unit.r#type),
