@@ -99,6 +99,12 @@ pub fn base_collision_system(
     }
 }
 
+pub fn clear_unit_collision(mut unit_query: Query<&mut Intersects, With<UnitComp>>) {
+    for mut intersects in unit_query.iter_mut() {
+        intersects.0 = false;
+    }
+}
+
 pub fn new_unit_comp(
     commands: &mut Commands,
     unit: Arc<GameUnit>,

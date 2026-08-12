@@ -26,12 +26,14 @@ impl Plugin for GamePlugin {
         app.add_systems(Update, enemy_base_spawn_unit);
         app.add_observer(advance_age_observer);
 
-        app.add_systems(Update, unit_movement_system);
-        app.add_systems(Update, unit_collision_system);
+        app.add_systems(Update, unit_movement_system.before(clear_unit_collision));
         app.add_systems(Update, combat_system);
         app.add_systems(Update, draw_attack_ranges.after(unit_movement_system));
-        app.add_systems(Update, base_collision_system);
         app.add_observer(unit_spawn_observer);
+        // Collision
+        app.add_systems(Update, clear_unit_collision);
+        app.add_systems(Update, unit_collision_system.after(clear_unit_collision));
+        app.add_systems(Update, base_collision_system.after(clear_unit_collision));
     }
 }
 
