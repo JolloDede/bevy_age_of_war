@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 use crate::{
     consts::{QUEUE_MARGIN_LEFT, QUEUE_MARGIN_TOP, QUEUE_RECT_HEIGHT},
-    event::{QueueTimerFinishedEvent, UnitQueueEvent, UnitSpawnEvent},
+    event::QueueTimerFinishedEvent,
     game_unit::{GameUnit, UnitType},
 };
 
@@ -17,9 +17,9 @@ pub struct QueueTimer {
 impl QueueTimer {
     pub fn set_unit(&mut self, unit: Arc<GameUnit>) {
         self.timer.set_duration(match unit.r#type {
-            UnitType::Meele => Duration::from_secs(2),
-            UnitType::Ranged => Duration::from_secs(4),
-            UnitType::Tank => Duration::from_secs(6),
+            UnitType::Meele => Duration::from_secs_f32(0.8),
+            UnitType::Ranged => Duration::from_secs(1),
+            UnitType::Tank => Duration::from_secs(2),
             UnitType::Super => Duration::from_secs(8),
         });
         self.timer.reset();

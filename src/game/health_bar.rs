@@ -13,9 +13,9 @@ pub struct Health(pub i32);
 impl From<UnitType> for Health {
     fn from(value: UnitType) -> Self {
         let hp = match value {
-            UnitType::Meele => 40,
-            UnitType::Ranged => 20,
-            UnitType::Tank => 80,
+            UnitType::Meele => 90,
+            UnitType::Ranged => 70,
+            UnitType::Tank => 300,
             UnitType::Super => 160,
         };
 

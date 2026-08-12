@@ -34,9 +34,9 @@ pub struct AttackDamange(i32);
 impl AttackDamange {
     pub fn new(age: Age, unit_type: UnitType) -> Self {
         let mut damage = match unit_type {
-            UnitType::Meele => 10,
-            UnitType::Ranged => 6,
-            UnitType::Tank => 20,
+            UnitType::Meele => 25,
+            UnitType::Ranged => 9,
+            UnitType::Tank => 40,
             UnitType::Super => 40,
         };
         damage *= match age {
