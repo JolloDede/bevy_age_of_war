@@ -90,7 +90,10 @@ pub fn advance_age_observer(_advance_event: On<BaseAdvanceAgeEvent>, mut age: Re
     debug!("Advance age event");
 
     match age.0 {
-        Age::StoneAge => age.0 = Age::Medival,
+        Age::StoneAge => {
+            age.0 = Age::Medival
+            // updpate buttons
+        }
         Age::Medival => age.0 = Age::Renaissance,
         Age::Renaissance => age.0 = Age::Modern,
         Age::Modern => age.0 = Age::Future,

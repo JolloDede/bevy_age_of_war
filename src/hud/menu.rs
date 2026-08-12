@@ -5,12 +5,13 @@ use bevy::{camera::visibility::RenderLayers, prelude::*};
 use crate::{
     consts::HUD_LAYER,
     event::{BaseAdvanceAgeEvent, UnitQueueEvent},
+    game_turret::TurretType,
     game_unit::{GameUnit, UnitType},
     hud::BaseAge,
+    resource_paths,
 };
 
-const ACTION_BUTTON_WIDTH: i32 = 60;
-const ACTION_BUTTON_HEIGHT: i32 = 60;
+const ACTION_BUTTON_SIZE: Vec2 = Vec2::new(60., 60.);
 const TEMP_BUTTON_FONT: f32 = 12.0;
 
 #[derive(Component)]
@@ -20,7 +21,7 @@ pub enum ButtonGroup {
     Turrets,
 }
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub enum MenuNavigationButtons {
     Unit,
     Turret,
@@ -38,22 +39,35 @@ pub enum MenuActionButton {
 pub struct UnitButtons(UnitType);
 
 #[derive(Component)]
-pub enum TurretButtons {
-    Small,
-    Medium,
-    Big,
-}
+pub struct TurretButtons(TurretType);
 
-pub fn setup_buttons(mut commands: Commands) {
+pub fn setup_buttons(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    base_age: Res<BaseAge>,
+) {
     let default_node = Node {
-        width: px(ACTION_BUTTON_WIDTH),
-        height: px(ACTION_BUTTON_HEIGHT),
+        width: px(ACTION_BUTTON_SIZE.x),
+        height: px(ACTION_BUTTON_SIZE.y),
         border: UiRect::all(px(5)),
         border_radius: BorderRadius::ZERO,
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         ..default()
     };
+
+    let back_bundle_unit = (
+        default_node.clone(),
+        ImageNode::from(asset_server.load("iconback.png")),
+        MenuNavigationButtons::Back,
+        Button,
+    );
+    let back_bundle_turret = (
+        back_bundle_unit.0.clone(),
+        back_bundle_unit.1.clone(),
+        back_bundle_unit.2.clone(),
+        back_bundle_unit.3.clone(),
+    );
 
     // Root vertical container
     commands
@@ -74,7 +88,7 @@ pub fn setup_buttons(mut commands: Commands) {
                 .spawn((
                     Node {
                         width: percent(100),
-                        height: px(ACTION_BUTTON_HEIGHT + 10),
+                        height: px(ACTION_BUTTON_SIZE.y + 10.),
                         flex_direction: FlexDirection::Row,
                         justify_content: JustifyContent::End,
                         align_items: AlignItems::Center,
@@ -160,7 +174,7 @@ pub fn setup_buttons(mut commands: Commands) {
                 .spawn((
                     Node {
                         width: percent(100),
-                        height: px(ACTION_BUTTON_HEIGHT + 10),
+                        height: px(ACTION_BUTTON_SIZE.y + 10.),
                         flex_direction: FlexDirection::Row,
                         justify_content: JustifyContent::End,
                         align_items: AlignItems::Center,
@@ -172,74 +186,46 @@ pub fn setup_buttons(mut commands: Commands) {
                 .with_children(|row| {
                     row.spawn((
                         default_node.clone(),
+                        ImageNode::from(asset_server.load(resource_paths::load_unit_buttons(
+                            base_age.0,
+                            UnitType::Meele,
+                        ))),
                         UnitButtons(UnitType::Meele),
                         Button,
-                        BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
-                        children![(
-                            Text::new("Meele"),
-                            TextFont {
-                                font_size: TEMP_BUTTON_FONT,
-                                ..default()
-                            },
-                            TextColor(Color::WHITE),
-                        )],
                     ));
                     row.spawn((
                         default_node.clone(),
+                        ImageNode::from(asset_server.load(resource_paths::load_unit_buttons(
+                            base_age.0,
+                            UnitType::Ranged,
+                        ))),
                         UnitButtons(UnitType::Ranged),
                         Button,
-                        BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
-                        children![(
-                            Text::new("Ranged"),
-                            TextFont {
-                                font_size: TEMP_BUTTON_FONT,
-                                ..default()
-                            },
-                            TextColor(Color::WHITE),
-                        )],
                     ));
                     row.spawn((
                         default_node.clone(),
+                        ImageNode::from(asset_server.load(resource_paths::load_unit_buttons(
+                            base_age.0,
+                            UnitType::Tank,
+                        ))),
                         UnitButtons(UnitType::Tank),
                         Button,
-                        BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
-                        children![(
-                            Text::new("Tank"),
-                            TextFont {
-                                font_size: TEMP_BUTTON_FONT,
-                                ..default()
-                            },
-                            TextColor(Color::WHITE),
-                        )],
                     ));
-                    row.spawn((
-                        default_node.clone(),
-                        UnitButtons(UnitType::Super),
-                        Button,
-                        BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
-                        children![(
-                            Text::new("Super Human"),
-                            TextFont {
-                                font_size: TEMP_BUTTON_FONT,
-                                ..default()
-                            },
-                            TextColor(Color::WHITE),
-                        )],
-                    ));
-                    row.spawn((
-                        default_node.clone(),
-                        MenuNavigationButtons::Back,
-                        Button,
-                        BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
-                        children![(
-                            Text::new("Back"),
-                            TextFont {
-                                font_size: TEMP_BUTTON_FONT,
-                                ..default()
-                            },
-                            TextColor(Color::WHITE),
-                        )],
-                    ));
+                    // row.spawn((
+                    //     default_node.clone(),
+                    //     UnitButtons(UnitType::Super),
+                    //     Button,
+                    //     BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
+                    //     children![(
+                    //         Text::new("Super Human"),
+                    //         TextFont {
+                    //             font_size: TEMP_BUTTON_FONT,
+                    //             ..default()
+                    //         },
+                    //         TextColor(Color::WHITE),
+                    //     )],
+                    // ));
+                    row.spawn(back_bundle_unit);
                 });
 
             // Third row
@@ -247,7 +233,7 @@ pub fn setup_buttons(mut commands: Commands) {
                 .spawn((
                     Node {
                         width: percent(100),
-                        height: px(ACTION_BUTTON_HEIGHT + 10),
+                        height: px(ACTION_BUTTON_SIZE.y + 10.),
                         flex_direction: FlexDirection::Row,
                         justify_content: JustifyContent::End,
                         align_items: AlignItems::Center,
@@ -259,60 +245,35 @@ pub fn setup_buttons(mut commands: Commands) {
                 .with_children(|row| {
                     row.spawn((
                         default_node.clone(),
-                        TurretButtons::Small,
+                        ImageNode::from(asset_server.load(resource_paths::load_turret_buttons(
+                            base_age.0,
+                            TurretType::Small,
+                        ))),
+                        TurretButtons(TurretType::Small),
                         Button,
                         BackgroundColor(Color::linear_rgb(0.0, 1.0, 0.5)),
-                        children![(
-                            Text::new("Small"),
-                            TextFont {
-                                font_size: TEMP_BUTTON_FONT,
-                                ..default()
-                            },
-                            TextColor(Color::WHITE),
-                        )],
                     ));
                     row.spawn((
                         default_node.clone(),
-                        TurretButtons::Medium,
+                        TurretButtons(TurretType::Medium),
+                        ImageNode::from(asset_server.load(resource_paths::load_turret_buttons(
+                            base_age.0,
+                            TurretType::Medium,
+                        ))),
                         Button,
                         BackgroundColor(Color::linear_rgb(0.0, 1.0, 0.5)),
-                        children![(
-                            Text::new("Medium"),
-                            TextFont {
-                                font_size: TEMP_BUTTON_FONT,
-                                ..default()
-                            },
-                            TextColor(Color::WHITE),
-                        )],
                     ));
                     row.spawn((
                         default_node.clone(),
-                        TurretButtons::Big,
+                        TurretButtons(TurretType::Large),
+                        ImageNode::from(asset_server.load(resource_paths::load_turret_buttons(
+                            base_age.0,
+                            TurretType::Large,
+                        ))),
                         Button,
                         BackgroundColor(Color::linear_rgb(0.0, 1.0, 0.5)),
-                        children![(
-                            Text::new("Big"),
-                            TextFont {
-                                font_size: TEMP_BUTTON_FONT,
-                                ..default()
-                            },
-                            TextColor(Color::WHITE),
-                        )],
                     ));
-                    row.spawn((
-                        default_node.clone(),
-                        MenuNavigationButtons::Back,
-                        Button,
-                        BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
-                        children![(
-                            Text::new("Back"),
-                            TextFont {
-                                font_size: TEMP_BUTTON_FONT,
-                                ..default()
-                            },
-                            TextColor(Color::WHITE),
-                        )],
-                    ));
+                    row.spawn(back_bundle_turret);
                 });
         });
 }
@@ -399,14 +360,14 @@ pub fn turret_button_system(
 ) {
     for (interaction, action) in action_query.iter() {
         if *interaction == Interaction::Pressed {
-            match action {
-                TurretButtons::Small => {
+            match action.0 {
+                TurretType::Small => {
                     println!("Small Turret")
                 }
-                TurretButtons::Medium => {
+                TurretType::Medium => {
                     println!("Medium Turret")
                 }
-                TurretButtons::Big => {
+                TurretType::Large => {
                     println!("Big Turret")
                 }
             }
