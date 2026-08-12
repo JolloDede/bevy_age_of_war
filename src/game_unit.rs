@@ -30,7 +30,7 @@ pub enum UnitType {
 
 impl Distribution<UnitType> for StandardUniform {
     fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> UnitType {
-        match rng.random_range(0..4) {
+        match rng.random_range(0..3) {
             0 => UnitType::Meele,
             1 => UnitType::Ranged,
             2 => UnitType::Tank,
