@@ -1,4 +1,4 @@
-use bevy::{ecs::relationship::RelatedSpawnerCommands, prelude::*};
+use bevy::{ecs::relationship::RelatedSpawnerCommands, prelude::*, sprite::Anchor};
 
 use crate::{consts::*, game_unit::UnitType};
 
@@ -55,8 +55,22 @@ pub fn health_bar_node(
         .with_children(|parent| {
             parent.spawn((
                 Sprite::from_color(HEALTH_BAR_HEALTH, health_bar_size),
-                Transform::from_xyz(0., 0., 1.),
+                Transform::from_xyz(-(health_bar_size.x / 2.), 0., 1.),
+                Anchor::CENTER_LEFT,
                 HealthBarMarker,
             ));
         });
+}
+
+pub fn health_system(
+    parent_query: Query<(&Health, &MaxHealth, &Children)>,
+    mut health_query: Query<&mut Transform, With<HealthBarMarker>>,
+) {
+    for (health, max_health, children) in parent_query.iter() {
+        let health_frac = health.0 as f32 / max_health.0 as f32;
+        for child in children {
+            let mut item = health_query.get_mut(*child).unwrap();
+            item.scale.x = health_frac;
+        }
+    }
 }

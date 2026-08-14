@@ -101,19 +101,6 @@ fn move_camera(
     transform.translation.x = transform.translation.x.clamp(min_x, max_x);
 }
 
-pub fn health_system(
-    parent_query: Query<(&Health, &MaxHealth, &Children)>,
-    mut health_query: Query<&mut Transform, With<HealthBarMarker>>,
-) {
-    for (health, max_health, children) in parent_query.iter() {
-        let health_frac = health.0 as f32 / max_health.0 as f32;
-        for child in children {
-            let mut item = health_query.get_mut(*child).unwrap();
-            item.scale.x = health_frac;
-        }
-    }
-}
-
 pub fn draw_rect_around_units(
     mut gizmos: Gizmos,
     unit_query: Query<(&Transform, &Sprite), With<UnitComp>>,
