@@ -116,9 +116,10 @@ pub fn combat_system(
                     if health.0 <= 0 {
                         info!("Killed a unit");
                         commands.entity(target_entity).despawn();
+                    } else {
+                        cooldown.0.reset();
+                        debug!("Attacked! remaining health: {}", health.0);
                     }
-                    cooldown.0.reset();
-                    debug!("Attacked! remaining health: {}", health.0);
                 }
             }
         }
