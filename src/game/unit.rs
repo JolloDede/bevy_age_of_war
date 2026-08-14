@@ -33,7 +33,7 @@ pub fn unit_spawn_observer(
     new_unit_comp(&mut commands, unit, false, asset_server);
 }
 
-const UNIT_SPEED: f32 = 6.0;
+const UNIT_SPEED: f32 = 3.0;
 
 pub fn unit_movement_system(
     mut unit_query: Query<(&mut Transform, &Intersects, Entity), With<UnitComp>>,
@@ -58,14 +58,8 @@ pub fn unit_collision_system(
 ) {
     let mut unit_trans_intersect = unit_query.iter_combinations_mut();
     while let Some([mut unit1, mut unit2]) = unit_trans_intersect.fetch_next() {
-        let unit1_aabb = Aabb2d::new(
-            unit1.0.translation.truncate(),
-            (unit1.2.0 * unit1.0.scale.truncate()) / 2.,
-        );
-        let unit2_aabb = Aabb2d::new(
-            unit2.0.translation.truncate(),
-            (unit1.2.0 * unit2.0.scale.truncate()) / 2.,
-        );
+        let unit1_aabb = Aabb2d::new(unit1.0.translation.truncate(), unit1.2.0 * 0.5);
+        let unit2_aabb = Aabb2d::new(unit2.0.translation.truncate(), unit2.2.0 * 0.5);
         if unit1_aabb.intersects(&unit2_aabb) {
             debug!("Unit intersected with oneanother");
             unit1.1.0 = true;
@@ -76,22 +70,19 @@ pub fn unit_collision_system(
 
 pub fn base_collision_system(
     mut unit_query: Query<(&Transform, &mut Intersects, &HitBoxSize), With<UnitComp>>,
-    base_query: Query<&Transform, With<Base>>,
+    base_query: Query<(&Transform, &HitBoxSize), With<Base>>,
 ) {
     let mut base_aabbs = Vec::with_capacity(2);
 
-    for base_trans in base_query.iter() {
+    for (base_trans, base_hitbox) in base_query.iter() {
         base_aabbs.push(Aabb2d::new(
             base_trans.translation.truncate(),
-            (BASE_SIZE * base_trans.scale.truncate()) / 2.,
+            base_hitbox.0 * 0.5,
         ));
     }
 
     for (trans, mut intersects, hitbox) in unit_query.iter_mut() {
-        let unit_aabb = Aabb2d::new(
-            trans.translation.truncate(),
-            (hitbox.0 * trans.scale.truncate()) / 2.,
-        );
+        let unit_aabb = Aabb2d::new(trans.translation.truncate(), hitbox.0 * 0.5);
         for base_aabb in &base_aabbs {
             if unit_aabb.intersects(base_aabb) {
                 debug!("Unit intersected with base");
@@ -114,10 +105,12 @@ pub fn new_unit_comp(
     asset_server: Res<AssetServer>,
 ) {
     let hitbox = HitBoxSize::from(unit.r#type);
+    let base_size = HitBoxSize::new_base();
+
     let x_pos = if is_enemy {
-        LEVEL_END - BASE_SIZE.x - (hitbox.x * 0.5) - 1.
+        LEVEL_END - base_size.x
     } else {
-        LEVEL_START + BASE_SIZE.x + (hitbox.x * 0.5) + 1.
+        LEVEL_START + base_size.x
     };
     let mut sprite =
         Sprite::from_image(asset_server.load(resource_paths::load_units(unit.level, unit.r#type)));

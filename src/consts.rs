@@ -13,7 +13,7 @@ pub const QUEUE_RECT_HEIGHT: i32 = 20;
 pub const QUEUE_MARGIN_TOP: f32 = 20.0;
 pub const QUEUE_MARGIN_LEFT: f32 = 20.0;
 
-pub const LEVEL_SIZE: Vec2 = Vec2::new(1510., 504.);
+pub const LEVEL_SIZE: Vec2 = Vec2::new(1520., 504.);
 pub const LEVEL_START: f32 = -(LEVEL_SIZE.x * 0.5);
 pub const LEVEL_END: f32 = LEVEL_SIZE.x * 0.5;
 
