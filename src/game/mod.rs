@@ -39,8 +39,12 @@ impl Plugin for GamePlugin {
         app.add_systems(Update, base_collision_system.after(clear_unit_collision));
 
         // Debug
-        app.add_systems(Update, draw_rect_around_units.after(unit_movement_system));
-        app.add_systems(Update, draw_attack_ranges.after(unit_movement_system));
+        #[cfg(debug_assertions)]
+        {
+            app.add_systems(Update, draw_rect_around_base);
+            app.add_systems(Update, draw_rect_around_units.after(unit_movement_system));
+            app.add_systems(Update, draw_attack_ranges.after(unit_movement_system));
+        }
     }
 }
 
@@ -105,6 +109,17 @@ pub fn draw_rect_around_units(
     }
 }
 
+fn draw_rect_around_base(
+    mut gizmos: Gizmos,
+    base_query: Query<(&Transform, &HitBoxSize), With<Base>>,
+) {
+    for (trans, hitbox) in base_query.iter() {
+        let pos = Vec2::new(trans.translation.x, trans.translation.y);
+
+        gizmos.rect_2d(pos, hitbox.0, BASE_COLOR);
+    }
+}
+
 #[derive(Component, Deref)]
 pub struct HitBoxSize(pub Vec2);
 
@@ -116,5 +131,11 @@ impl From<UnitType> for HitBoxSize {
             UnitType::Tank => Vec2::new(100., 120.),
             UnitType::Super => Vec2::new(30., 80.),
         })
+    }
+}
+
+impl HitBoxSize {
+    pub fn new_base() -> Self {
+        Self(Vec2::new(220., 200.))
     }
 }

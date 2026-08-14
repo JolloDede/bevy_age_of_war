@@ -7,6 +7,7 @@ use crate::{
     consts::*,
     event::BaseAdvanceAgeEvent,
     game::{
+        HitBoxSize,
         health_bar::{Health, MaxHealth, health_bar_node},
         unit::new_unit_comp,
     },
@@ -41,6 +42,7 @@ pub fn spawn_bases(mut commands: Commands, asset_server: Res<AssetServer>) {
             Sprite::from_image(asset_server.load(resource_paths::load_base(Age::StoneAge))),
             Transform::from_xyz(player_base_x, base_y, 1.0),
             Base::new(),
+            HitBoxSize::new_base(),
         ))
         .with_children(|parent| {
             health_bar_node(parent, Health(UNIT_BASE_HEALTH), true);
@@ -55,6 +57,7 @@ pub fn spawn_bases(mut commands: Commands, asset_server: Res<AssetServer>) {
             },
             Transform::from_xyz(enemy_base_x, base_y, 1.0),
             Base::new(),
+            HitBoxSize::new_base(),
             Enemy,
             EnemyBaseQueueTimer(Timer::from_seconds(4., TimerMode::Repeating)),
         ))
