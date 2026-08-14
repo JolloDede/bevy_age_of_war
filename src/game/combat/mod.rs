@@ -51,9 +51,19 @@ impl AttackDamange {
     }
 }
 
-pub fn draw_attack_ranges(units: Query<(&Transform, &AttackRange)>, mut gizmos: Gizmos) {
-    for (transform, range) in &units {
-        let position = transform.translation.truncate();
+pub fn draw_attack_ranges(
+    mut gizmos: Gizmos,
+    units: Query<(&Transform, &AttackRange, &Sprite)>,
+    images: Res<Assets<Image>>,
+) {
+    for (trans, range, sprite) in &units {
+        let Some(image) = images.get(&sprite.image) else {
+            continue;
+        };
+        let position = Vec2::new(
+            trans.translation.x,
+            trans.translation.y + (image.height() as f32 / 4.),
+        );
 
         gizmos.circle_2d(position, range.0, Color::srgb(1.0, 0.0, 0.0));
     }

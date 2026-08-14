@@ -126,7 +126,7 @@ pub struct HitBoxSize(pub Vec2);
 impl From<UnitType> for HitBoxSize {
     fn from(value: UnitType) -> Self {
         Self(match value {
-            UnitType::Meele => Vec2::new(30., 80.),
+            UnitType::Meele => Vec2::new(40., 80.),
             UnitType::Ranged => Vec2::new(30., 80.),
             UnitType::Tank => Vec2::new(100., 120.),
             UnitType::Super => Vec2::new(30., 80.),
