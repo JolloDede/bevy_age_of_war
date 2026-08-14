@@ -11,6 +11,7 @@ use crate::{
         unit::new_unit_comp,
     },
     game_unit::{GameUnit, UnitType},
+    resource_paths,
 };
 
 #[derive(Component)]
@@ -30,14 +31,14 @@ impl Base {
 #[derive(Component)]
 pub struct EnemyBaseQueueTimer(Timer);
 
-pub fn spawn_bases(mut commands: Commands) {
-    let player_base_x = LEVEL_START + (BASE_SIZE.x * 0.5);
-    let enemy_base_x = LEVEL_END - (BASE_SIZE.x * 0.5);
+pub fn spawn_bases(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let player_base_x = LEVEL_START + (BASE_SIZE.x * 0.5) + BASE_MARGIN;
+    let enemy_base_x = LEVEL_END - (BASE_SIZE.x * 0.5) - BASE_MARGIN;
     let base_y = GROUND_Y + (BASE_SIZE.y * 0.5);
 
     commands
         .spawn((
-            Sprite::from_color(BASE_COLOR, BASE_SIZE),
+            Sprite::from_image(asset_server.load(resource_paths::load_base(Age::StoneAge))),
             Transform::from_xyz(player_base_x, base_y, 1.0),
             Base::new(),
         ))
@@ -47,7 +48,11 @@ pub fn spawn_bases(mut commands: Commands) {
 
     commands
         .spawn((
-            Sprite::from_color(BASE_COLOR, BASE_SIZE),
+            Sprite {
+                image: asset_server.load(resource_paths::load_base(Age::StoneAge)),
+                flip_x: true,
+                ..Default::default()
+            },
             Transform::from_xyz(enemy_base_x, base_y, 1.0),
             Base::new(),
             Enemy,

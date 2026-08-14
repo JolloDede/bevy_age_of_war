@@ -52,36 +52,14 @@ fn spawn_camera(mut commands: Commands) {
     ));
 }
 
-fn spawn_world(mut commands: Commands) {
-    // horizon
-    commands
-        .spawn(Sprite::from_color(
-            Color::srgb(0.0, 0.0, 1.0),
-            Vec2::new(LEVEL_WIDTH, 200.0),
-        ))
-        .insert(Transform::from_xyz(0.0, 0.0, 0.0));
-    // vegetation
-    commands
-        .spawn(Sprite::from_color(
-            Color::srgb(0.0, 1.0, 0.0),
-            Vec2::new(LEVEL_WIDTH, 100.0),
-        ))
-        .insert(Transform::from_xyz(0.0, -50.0, 0.0));
-    // ground
-    commands
-        .spawn(Sprite::from_color(
-            Color::srgb(0.5, 0.1, 0.1),
-            Vec2::new(LEVEL_WIDTH, GROUND_HEIGHT),
-        ))
-        .insert(Transform::from_translation(GROUND_TRANSLATION));
-}
-
 fn move_camera(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut query: Query<(&mut Transform, &Camera), With<GameCamera>>,
     time: Res<Time>,
 ) {
-    let (mut transform, camera) = query.single_mut().unwrap();
+    let Ok((mut transform, camera)) = query.single_mut() else {
+        return;
+    };
     let camera_width = camera.logical_viewport_size().unwrap().x;
     let camera_half_width = camera_width * 0.5;
 
@@ -99,6 +77,10 @@ fn move_camera(
     let max_x = LEVEL_END - camera_half_width;
 
     transform.translation.x = transform.translation.x.clamp(min_x, max_x);
+}
+
+fn spawn_world(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn(Sprite::from_image(asset_server.load("Background.png")));
 }
 
 pub fn draw_rect_around_units(

@@ -67,3 +67,19 @@ pub fn load_units(age: Age, unit_type: UnitType) -> String {
 
     return res;
 }
+
+pub fn load_base(age: Age) -> String {
+    let mut res = String::from("base/");
+
+    match age {
+        Age::StoneAge => res.push('1'),
+        Age::Medival => res.push('2'),
+        Age::Renaissance => res.push('3'),
+        Age::Modern => res.push('4'),
+        Age::Future => res.push('5'),
+    };
+
+    res.push_str(".png");
+
+    return res;
+}
