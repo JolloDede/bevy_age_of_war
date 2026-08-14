@@ -28,12 +28,15 @@ impl Plugin for GamePlugin {
 
         app.add_systems(Update, unit_movement_system.before(clear_unit_collision));
         app.add_systems(Update, combat_system);
-        app.add_systems(Update, draw_attack_ranges.after(unit_movement_system));
         app.add_observer(unit_spawn_observer);
         // Collision
         app.add_systems(Update, clear_unit_collision);
         app.add_systems(Update, unit_collision_system.after(clear_unit_collision));
         app.add_systems(Update, base_collision_system.after(clear_unit_collision));
+
+        // Debug
+        app.add_systems(Update, draw_rect_around_units.after(unit_movement_system));
+        app.add_systems(Update, draw_attack_ranges.after(unit_movement_system));
     }
 }
 
@@ -108,5 +111,26 @@ pub fn health_system(
             let mut item = health_query.get_mut(*child).unwrap();
             item.scale.x = health_frac;
         }
+    }
+}
+
+pub fn draw_rect_around_units(
+    mut gizmos: Gizmos,
+    unit_query: Query<(&Transform, &Sprite), With<UnitComp>>,
+    images: Res<Assets<Image>>,
+) {
+    for (trans, sprite) in unit_query.iter() {
+        let Some(image) = images.get(&sprite.image) else {
+            continue;
+        };
+        let size = image.size_f32();
+
+        let scaled_size = size * trans.scale.truncate();
+
+        gizmos.rect_2d(
+            trans.translation.truncate(),
+            scaled_size,
+            Color::srgb(0.0, 1.0, 0.0),
+        );
     }
 }

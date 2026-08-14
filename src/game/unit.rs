@@ -119,7 +119,8 @@ pub fn new_unit_comp(
 
     let mut unit_bundle = commands.spawn((
         Sprite::from_image(asset_server.load(resource_paths::load_units(unit.level, unit.r#type))),
-        Transform::from_xyz(x_pos, GROUND_Y + (UNIT_SIZE.y * 0.5), 1.0),
+        Transform::from_xyz(x_pos, GROUND_Y + (UNIT_SIZE.y * 0.5), 1.0)
+            .with_scale(Vec3::splat(1.5)),
         Intersects::default(),
         AttackRange::from(unit.r#type),
         AttackDamange::new(unit.level, unit.r#type),
