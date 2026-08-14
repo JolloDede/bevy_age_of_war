@@ -40,8 +40,8 @@ pub fn health_bar_node(
         Vec2::new(BASE_SIZE.x / 2., 12.)
     } else {
         Vec2::new(
-            UNIT_SIZE.x,
-            UNIT_SIZE.x / HEALTH_BAR_SIZE.x * HEALTH_BAR_SIZE.y,
+            BASE_SIZE.x,
+            BASE_SIZE.x / HEALTH_BAR_SIZE.x * HEALTH_BAR_SIZE.y,
         )
     };
 

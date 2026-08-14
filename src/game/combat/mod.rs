@@ -3,7 +3,7 @@ use bevy::{math::FloatPow, prelude::*};
 use crate::{
     age_of_war::Age,
     consts::*,
-    game::{base::Enemy, health_bar::Health, unit::UnitComp},
+    game::{HitBoxSize, base::Enemy, health_bar::Health, unit::UnitComp},
     game_unit::UnitType,
 };
 
@@ -22,7 +22,7 @@ impl From<UnitType> for AttackRange {
             UnitType::Super => 3.,
         };
 
-        range *= UNIT_SIZE.x * 1.5;
+        range *= HitBoxSize::from(value).x * 1.5;
 
         Self(range)
     }

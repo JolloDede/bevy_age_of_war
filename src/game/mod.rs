@@ -1,6 +1,10 @@
 use bevy::{camera::visibility::RenderLayers, prelude::*};
 
-use crate::{consts::*, event::UnitSpawnEvent, game_unit::GameUnit};
+use crate::{
+    consts::*,
+    event::UnitSpawnEvent,
+    game_unit::{GameUnit, UnitType},
+};
 
 mod base;
 use base::*;
@@ -25,7 +29,7 @@ impl Plugin for GamePlugin {
         app.add_systems(Startup, spawn_bases);
         app.add_systems(Update, enemy_base_spawn_unit);
         app.add_observer(advance_age_observer);
-
+        // Unit
         app.add_systems(Update, unit_movement_system.before(clear_unit_collision));
         app.add_systems(Update, combat_system);
         app.add_observer(unit_spawn_observer);
@@ -85,21 +89,32 @@ fn spawn_world(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 pub fn draw_rect_around_units(
     mut gizmos: Gizmos,
-    unit_query: Query<(&Transform, &Sprite), With<UnitComp>>,
+    unit_query: Query<(&Transform, &Sprite, &HitBoxSize), With<UnitComp>>,
     images: Res<Assets<Image>>,
 ) {
-    for (trans, sprite) in unit_query.iter() {
+    for (trans, sprite, hitbox) in unit_query.iter() {
         let Some(image) = images.get(&sprite.image) else {
             continue;
         };
-        let size = image.size_f32();
-
-        let scaled_size = size * trans.scale.truncate();
-
-        gizmos.rect_2d(
-            trans.translation.truncate(),
-            scaled_size,
-            Color::srgb(0.0, 1.0, 0.0),
+        let pos = Vec2::new(
+            trans.translation.x,
+            trans.translation.y + (image.height() as f32 / 4.),
         );
+
+        gizmos.rect_2d(pos, hitbox.0, UNIT_COLOR);
+    }
+}
+
+#[derive(Component, Deref)]
+pub struct HitBoxSize(pub Vec2);
+
+impl From<UnitType> for HitBoxSize {
+    fn from(value: UnitType) -> Self {
+        Self(match value {
+            UnitType::Meele => Vec2::new(30., 80.),
+            UnitType::Ranged => Vec2::new(30., 80.),
+            UnitType::Tank => Vec2::new(100., 120.),
+            UnitType::Super => Vec2::new(30., 80.),
+        })
     }
 }
