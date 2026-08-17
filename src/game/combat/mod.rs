@@ -15,14 +15,14 @@ pub struct AttackRange(f32);
 
 impl From<UnitType> for AttackRange {
     fn from(value: UnitType) -> Self {
-        let mut range = match value {
-            UnitType::Meele => 1.,
-            UnitType::Ranged => 2.,
-            UnitType::Tank => 1.,
+        let range = match value {
+            UnitType::Meele => 60.,
+            UnitType::Ranged => 100.,
+            UnitType::Tank => 80.,
             UnitType::Super => 3.,
         };
 
-        range *= HitBoxSize::from(value).x * 1.5;
+        // range *= HitBoxSize::from(value).x * 1.5;
 
         Self(range)
     }
