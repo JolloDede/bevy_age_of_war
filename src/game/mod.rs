@@ -1,10 +1,6 @@
 use bevy::{camera::visibility::RenderLayers, prelude::*};
 
-use crate::{
-    consts::*,
-    event::UnitSpawnEvent,
-    game_unit::{GameUnit, UnitType},
-};
+use crate::{consts::*, game_unit::UnitType};
 
 mod base;
 use base::*;

@@ -7,14 +7,14 @@ use bevy::{
 
 use crate::{
     consts::*,
-    event::{BaseAdvanceAgeEvent, UnitSpawnEvent},
+    event::UnitSpawnEvent,
     game::{
-        BASE_SIZE, GROUND_Y, HitBoxSize,
+        GROUND_Y, HitBoxSize,
         base::{Base, Enemy},
         combat::{AttackCooldown, AttackDamange, AttackRange},
         health_bar::{Health, health_bar_node},
     },
-    game_unit::{GameUnit, UnitType},
+    game_unit::GameUnit,
     resource_paths,
 };
 
@@ -54,14 +54,38 @@ pub fn unit_movement_system(
 pub struct Intersects(bool);
 
 pub fn unit_collision_system(
-    mut unit_query: Query<(&Transform, &mut Intersects, &HitBoxSize), With<UnitComp>>,
+    mut unit_query: Query<(&Transform, &mut Intersects, &HitBoxSize, Entity), With<UnitComp>>,
+    enemy_query: Query<&Enemy>,
 ) {
     let mut unit_trans_intersect = unit_query.iter_combinations_mut();
     while let Some([mut unit1, mut unit2]) = unit_trans_intersect.fetch_next() {
         let unit1_aabb = Aabb2d::new(unit1.0.translation.truncate(), unit1.2.0 * 0.5);
         let unit2_aabb = Aabb2d::new(unit2.0.translation.truncate(), unit2.2.0 * 0.5);
         if unit1_aabb.intersects(&unit2_aabb) {
-            debug!("Unit intersected with oneanother");
+            let is_unit1_enemy = enemy_query.get(unit1.3).is_ok();
+            let is_unit2_enemy = enemy_query.get(unit2.3).is_ok();
+            // Check if enemy
+            if is_unit1_enemy == is_unit2_enemy {
+                // check if its the first if they match enemy
+                match is_unit1_enemy {
+                    // only stop the later
+                    true => {
+                        if unit1_aabb.min.x > unit2_aabb.min.x {
+                            unit1.1.0 = true;
+                        } else {
+                            unit2.1.0 = true;
+                        }
+                    }
+                    false => {
+                        if unit1_aabb.max.x > unit2_aabb.max.x {
+                            unit2.1.0 = true;
+                        } else {
+                            unit1.1.0 = true;
+                        }
+                    }
+                }
+                continue;
+            }
             unit1.1.0 = true;
             unit2.1.0 = true;
         }

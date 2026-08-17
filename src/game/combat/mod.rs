@@ -2,8 +2,7 @@ use bevy::{math::FloatPow, prelude::*};
 
 use crate::{
     age_of_war::Age,
-    consts::*,
-    game::{HitBoxSize, base::Enemy, health_bar::Health, unit::UnitComp},
+    game::{base::Enemy, health_bar::Health, unit::UnitComp},
     game_unit::UnitType,
 };
 
@@ -16,7 +15,7 @@ pub struct AttackRange(f32);
 impl From<UnitType> for AttackRange {
     fn from(value: UnitType) -> Self {
         let range = match value {
-            UnitType::Meele => 60.,
+            UnitType::Meele => 80.,
             UnitType::Ranged => 100.,
             UnitType::Tank => 80.,
             UnitType::Super => 3.,
@@ -81,7 +80,7 @@ pub fn combat_system(
     )>,
     attacked_unit: Query<(Entity, &Transform), With<UnitComp>>,
     enemy_query: Query<&Enemy>,
-    health_parent_query: Query<(&Children)>,
+    health_parent_query: Query<&Children>,
     mut health_query: Query<&mut Health>,
 ) {
     for (attacker_trans, attacker_range, attacker_damage, mut cooldown, entity) in

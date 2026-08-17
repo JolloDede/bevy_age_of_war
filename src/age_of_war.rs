@@ -1,6 +1,6 @@
-use bevy::{app::PluginGroupBuilder, camera::visibility::RenderLayers, prelude::*};
+use bevy::{app::PluginGroupBuilder, prelude::*};
 
-use crate::{consts::GAME_LAYER, game::GamePlugin, hud::HudPlugin};
+use crate::{game::GamePlugin, hud::HudPlugin};
 
 pub struct AgeOfWarPlugins;
 

@@ -2,12 +2,7 @@ use std::{collections::VecDeque, sync::Arc};
 
 use bevy::{camera::visibility::RenderLayers, prelude::*};
 
-use crate::{
-    consts::*,
-    event::{QueueTimerFinishedEvent, UnitQueueEvent, UnitSpawnEvent},
-    game_unit::GameUnit,
-    hud::progressbar::QueueTimer,
-};
+use crate::{consts::*, event::UnitQueueEvent, game_unit::GameUnit, hud::progressbar::QueueTimer};
 
 #[derive(Resource, Deref)]
 pub struct EntityQueue(VecDeque<QueueEntry>);

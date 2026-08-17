@@ -8,10 +8,10 @@ use crate::{
     event::BaseAdvanceAgeEvent,
     game::{
         HitBoxSize,
-        health_bar::{Health, MaxHealth, health_bar_node},
+        health_bar::{Health, health_bar_node},
         unit::new_unit_comp,
     },
-    game_unit::{GameUnit, UnitType},
+    game_unit::GameUnit,
     resource_paths,
 };
 
