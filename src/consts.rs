@@ -6,6 +6,7 @@ pub const HUD_LAYER: usize = 1;
 pub const QUEUE_COLOR: Color = Color::linear_rgb(0.77, 0.77, 0.77);
 pub const QUEUE_COLOR_OCCUPIED: Color = Color::linear_rgb(0.0, 1.0, 0.0);
 pub const QUEUE_BORDER_COLOR: Color = Color::linear_rgb(0.0, 0.0, 0.0);
+pub const QUEUE_SIZE: u8 = 5;
 // Temp for testing
 // pub  const QUEUE_BORDER_COLOR: Color = Color::linear_rgb(1.0, 0.0, 0.0);
 pub const QUEUE_RECT_WIDTH: i32 = 20;

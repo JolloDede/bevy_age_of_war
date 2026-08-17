@@ -4,24 +4,30 @@ use bevy::{camera::visibility::RenderLayers, prelude::*};
 
 use crate::{consts::*, event::UnitQueueEvent, game_unit::GameUnit, hud::progressbar::QueueTimer};
 
-#[derive(Resource, Deref)]
-pub struct EntityQueue(VecDeque<QueueEntry>);
+#[derive(Resource)]
+pub struct EntityQueue {
+    queue: VecDeque<QueueEntry>,
+    count: u8,
+}
 
 impl Default for EntityQueue {
     fn default() -> Self {
-        let mut entries = Vec::new();
+        let mut entries = Vec::with_capacity(QUEUE_SIZE as usize);
         for _ in 0..5 {
             entries.push(QueueEntry::new());
         }
-        Self(VecDeque::from(entries))
+        Self {
+            queue: VecDeque::from(entries),
+            count: 0,
+        }
     }
 }
 
 impl EntityQueue {
     pub fn get_last(&self) -> QueueEntry {
-        let res = self.0.front().unwrap();
+        let res = self.queue.front().unwrap();
 
-        for entry in self.0.iter().rev() {
+        for entry in self.queue.iter().rev() {
             if entry.0.is_some() {
                 return QueueEntry(entry.0.clone());
             }
@@ -31,16 +37,26 @@ impl EntityQueue {
     }
 
     pub fn get_and_clear_last(&mut self) -> QueueEntry {
-        for entry in self.0.iter_mut().rev() {
+        for entry in self.queue.iter_mut().rev() {
             if entry.0.is_some() {
-                // let res = entry.clone();
-                // entry.0 = None;
+                self.count -= 1;
                 return QueueEntry(entry.0.take());
             }
         }
 
         error!("Failed to get and clear last element of EntityQueue");
         QueueEntry(None)
+    }
+
+    pub fn push_front(&mut self, value: QueueEntry) {
+        if self.count < QUEUE_SIZE {
+            self.count += 1;
+            self.queue.push_front(value);
+        }
+    }
+
+    pub fn get(&self, i: usize) -> Option<&QueueEntry> {
+        self.queue.get(i)
     }
 }
 
@@ -125,7 +141,7 @@ pub fn unit_queue_observer(
 ) {
     debug!("Triggered UnitQueueEvent with: {:?}", unit.event());
 
-    queue.0.push_front(QueueEntry(Some(unit.0.clone())));
+    queue.push_front(QueueEntry(Some(unit.0.clone())));
 
     for mut progress in progress_query.iter_mut() {
         if progress.unit.is_none() {
