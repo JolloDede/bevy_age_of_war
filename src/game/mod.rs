@@ -18,6 +18,8 @@ impl Plugin for GamePlugin {
         app.add_systems(Startup, spawn_camera);
         app.add_systems(Update, move_camera);
 
+        app.add_systems(Startup, load_audio);
+
         app.add_systems(Startup, spawn_world);
 
         app.add_systems(Update, health_system);
@@ -114,6 +116,12 @@ fn draw_rect_around_base(
 
         gizmos.rect_2d(pos, hitbox.0, BASE_COLOR);
     }
+}
+
+pub fn load_audio(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn(AudioPlayer::new(
+        asset_server.load("Age of War - Theme Song.mp3"),
+    ));
 }
 
 #[derive(Component, Deref)]
