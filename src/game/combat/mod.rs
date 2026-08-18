@@ -28,8 +28,8 @@ pub struct AttackRange(f32);
 impl From<UnitType> for AttackRange {
     fn from(value: UnitType) -> Self {
         let range = match value {
-            UnitType::Meele => 80.,
-            UnitType::Ranged => 100.,
+            UnitType::Meele => 40.,
+            UnitType::Ranged => 120.,
             UnitType::Tank => 80.,
             UnitType::Super => 3.,
         };
