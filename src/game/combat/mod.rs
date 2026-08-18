@@ -1,4 +1,12 @@
-use bevy::{math::FloatPow, prelude::*};
+use std::ops::Div;
+
+use bevy::{
+    math::{
+        FloatPow,
+        bounding::{Aabb2d, BoundingCircle, IntersectsVolume},
+    },
+    prelude::*,
+};
 
 use crate::{
     age_of_war::Age,
@@ -83,11 +91,12 @@ pub fn combat_system(
         &mut AttackCooldown,
         Entity,
     )>,
-    attacked_unit: Query<(Entity, &Transform, &HitBoxSize), With<UnitComp>>,
-    attacked_base: Query<(Entity, &Transform, &HitBoxSize), With<Base>>,
+    attacked_unit: Query<(Entity, &Transform, &HitBoxSize, &Sprite), With<UnitComp>>,
+    attacked_base: Query<(Entity, &Transform, &HitBoxSize, &Sprite), With<Base>>,
     enemy_query: Query<&Enemy>,
     health_parent_query: Query<&Children>,
     mut health_query: Query<&mut Health>,
+    images: Res<Assets<Image>>,
 ) {
     for (attacker_trans, attacker_range, attacker_damage, mut cooldown, entity) in
         attacker_query.iter_mut()
@@ -98,51 +107,66 @@ pub fn combat_system(
             continue;
         }
 
-        let attacker_pos = attacker_trans.translation.truncate();
-        let range_squared = attacker_range.0.squared();
+        let attacker_radius =
+            BoundingCircle::new(attacker_trans.translation.truncate(), attacker_range.0);
         let attacker_is_enemy = enemy_query.get(entity).is_ok();
 
         let mut nearest_enemy: Option<(Entity, f32)> = None;
-        for (attacked_entity, attacked_trans, hitbox) in attacked_unit.iter() {
+        for (attacked_entity, attacked_trans, hitbox, sprite) in attacked_unit.iter() {
             let is_enemy = enemy_query.get(attacked_entity).is_ok();
             if attacker_is_enemy == is_enemy {
                 continue;
             }
 
-            let mut attacked_pos = attacked_trans.translation.truncate();
-            match is_enemy {
-                true => attacked_pos -= hitbox.0,
-                false => attacked_pos += hitbox.0,
-            }
-            let distance_squared = attacker_pos.distance_squared(attacked_pos);
-            if distance_squared <= range_squared {
+            let Some(image) = images.get(&sprite.image) else {
+                continue;
+            };
+
+            let pos = Vec2::new(
+                attacked_trans.translation.x,
+                attacked_trans.translation.y + (image.height() as f32 / 4.),
+            );
+            let attacked_hitbox = Aabb2d::new(pos, hitbox.div(2.));
+            if attacker_radius.intersects(&attacked_hitbox) {
+                let distance = if is_enemy {
+                    attacker_radius.center.x - hitbox.x.div(2.)
+                } else {
+                    attacker_radius.center.x + hitbox.x.div(2.)
+                };
                 if let Some((_, nearest_distance)) = nearest_enemy {
-                    if distance_squared < nearest_distance {
-                        nearest_enemy = Some((attacked_entity, distance_squared));
+                    if distance < nearest_distance {
+                        nearest_enemy = Some((attacked_entity, distance));
                     }
                 } else {
-                    nearest_enemy = Some((attacked_entity, distance_squared));
+                    nearest_enemy = Some((attacked_entity, distance));
                 }
             }
         }
 
         if nearest_enemy.is_none() {
-            for (base_entity, base_trans, hitbox) in attacked_base.iter() {
+            for (base_entity, base_trans, hitbox, sprite) in attacked_base.iter() {
                 let is_enemy = enemy_query.get(base_entity).is_ok();
                 if attacker_is_enemy == is_enemy {
                     continue;
                 }
 
-                let mut attacked_pos = base_trans.translation.truncate();
-                match is_enemy {
-                    true => attacked_pos -= hitbox.0,
-                    false => attacked_pos += hitbox.0,
-                }
-                let distance_squared = attacker_pos.distance_squared(attacked_pos);
-                debug!(distance_squared, range_squared);
-                if distance_squared <= range_squared {
+                let Some(image) = images.get(&sprite.image) else {
+                    continue;
+                };
+
+                let pos = Vec2::new(
+                    base_trans.translation.x,
+                    base_trans.translation.y + (image.height() as f32 / 4.),
+                );
+                let attacked_hitbox = Aabb2d::new(pos, hitbox.div(2.));
+                if attacker_radius.intersects(&attacked_hitbox) {
                     debug!("Attack enemy base");
-                    nearest_enemy = Some((base_entity, distance_squared));
+                    let distance = if is_enemy {
+                        attacker_radius.center.x - hitbox.x.div(2.)
+                    } else {
+                        attacker_radius.center.x + hitbox.x.div(2.)
+                    };
+                    nearest_enemy = Some((base_entity, distance));
                 }
             }
         }
