@@ -2,7 +2,12 @@ use bevy::{math::FloatPow, prelude::*};
 
 use crate::{
     age_of_war::Age,
-    game::{base::Enemy, health_bar::Health, unit::UnitComp},
+    game::{
+        HitBoxSize,
+        base::{Base, Enemy},
+        health_bar::Health,
+        unit::UnitComp,
+    },
     game_unit::UnitType,
 };
 
@@ -78,7 +83,8 @@ pub fn combat_system(
         &mut AttackCooldown,
         Entity,
     )>,
-    attacked_unit: Query<(Entity, &Transform), With<UnitComp>>,
+    attacked_unit: Query<(Entity, &Transform, &HitBoxSize), With<UnitComp>>,
+    attacked_base: Query<(Entity, &Transform, &HitBoxSize), With<Base>>,
     enemy_query: Query<&Enemy>,
     health_parent_query: Query<&Children>,
     mut health_query: Query<&mut Health>,
@@ -97,15 +103,18 @@ pub fn combat_system(
         let attacker_is_enemy = enemy_query.get(entity).is_ok();
 
         let mut nearest_enemy: Option<(Entity, f32)> = None;
-        for (attacked_entity, attacked_trans) in attacked_unit.iter() {
+        for (attacked_entity, attacked_trans, hitbox) in attacked_unit.iter() {
             let is_enemy = enemy_query.get(attacked_entity).is_ok();
             if attacker_is_enemy == is_enemy {
                 continue;
             }
 
-            let attacked_pos = attacked_trans.translation.truncate();
+            let mut attacked_pos = attacked_trans.translation.truncate();
+            match is_enemy {
+                true => attacked_pos -= hitbox.0,
+                false => attacked_pos += hitbox.0,
+            }
             let distance_squared = attacker_pos.distance_squared(attacked_pos);
-            debug!(range_squared, distance_squared);
             if distance_squared <= range_squared {
                 if let Some((_, nearest_distance)) = nearest_enemy {
                     if distance_squared < nearest_distance {
@@ -113,6 +122,27 @@ pub fn combat_system(
                     }
                 } else {
                     nearest_enemy = Some((attacked_entity, distance_squared));
+                }
+            }
+        }
+
+        if nearest_enemy.is_none() {
+            for (base_entity, base_trans, hitbox) in attacked_base.iter() {
+                let is_enemy = enemy_query.get(base_entity).is_ok();
+                if attacker_is_enemy == is_enemy {
+                    continue;
+                }
+
+                let mut attacked_pos = base_trans.translation.truncate();
+                match is_enemy {
+                    true => attacked_pos -= hitbox.0,
+                    false => attacked_pos += hitbox.0,
+                }
+                let distance_squared = attacker_pos.distance_squared(attacked_pos);
+                debug!(distance_squared, range_squared);
+                if distance_squared <= range_squared {
+                    debug!("Attack enemy base");
+                    nearest_enemy = Some((base_entity, distance_squared));
                 }
             }
         }
