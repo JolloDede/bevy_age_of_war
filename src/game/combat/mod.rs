@@ -1,10 +1,7 @@
 use std::ops::Div;
 
 use bevy::{
-    math::{
-        FloatPow,
-        bounding::{Aabb2d, BoundingCircle, IntersectsVolume},
-    },
+    math::bounding::{Aabb2d, BoundingCircle, IntersectsVolume},
     prelude::*,
 };
 

@@ -3,6 +3,7 @@ use std::sync::Arc;
 use bevy::{camera::visibility::RenderLayers, prelude::*};
 
 use crate::{
+    age_of_war::Age,
     consts::HUD_LAYER,
     event::{BaseAdvanceAgeEvent, UnitQueueEvent},
     game_turret::TurretType,
@@ -36,10 +37,10 @@ pub enum MenuActionButton {
 }
 
 #[derive(Component)]
-pub struct UnitButtons(UnitType);
+pub struct UnitButtons(pub UnitType);
 
 #[derive(Component)]
-pub struct TurretButtons(TurretType);
+pub struct TurretButtons(pub TurretType);
 
 pub fn setup_buttons(
     mut commands: Commands,
@@ -323,6 +324,7 @@ pub fn menu_navigation_button_system(
 pub fn main_button_system(
     mut commands: Commands,
     action_query: Query<(&Interaction, &MenuActionButton), (Changed<Interaction>, With<Button>)>,
+    mut age: ResMut<BaseAge>,
 ) {
     for (interaction, action) in action_query.iter() {
         if *interaction == Interaction::Pressed {
@@ -334,6 +336,13 @@ pub fn main_button_system(
                     println!("Upgrade base")
                 }
                 MenuActionButton::AdvanceAge => {
+                    age.0 = match age.0 {
+                        Age::StoneAge => Age::Medival,
+                        Age::Medival => Age::Renaissance,
+                        Age::Renaissance => Age::Modern,
+                        Age::Modern => Age::Future,
+                        Age::Future => panic!("Already reached the last age"),
+                    };
                     commands.trigger(BaseAdvanceAgeEvent);
                 }
             }

@@ -12,6 +12,7 @@ use crate::{
         unit::new_unit_comp,
     },
     game_unit::GameUnit,
+    hud::BaseAge,
     resource_paths,
 };
 
@@ -66,8 +67,15 @@ pub fn spawn_bases(mut commands: Commands, asset_server: Res<AssetServer>) {
         });
 }
 
-pub fn advance_age_observer(advance_event: On<BaseAdvanceAgeEvent>) {
-    debug!("Advance age event");
+pub fn advance_age_observer(
+    _advance_event: On<BaseAdvanceAgeEvent>,
+    base_query: Single<&mut Sprite, (With<Base>, Without<Enemy>)>,
+    asset_server: Res<AssetServer>,
+    base_age: Res<BaseAge>,
+) {
+    let mut sprite = base_query.into_inner();
+
+    sprite.image = asset_server.load(resource_paths::load_base(base_age.0));
 }
 
 pub fn enemy_base_spawn_unit(

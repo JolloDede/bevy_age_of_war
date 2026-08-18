@@ -4,6 +4,7 @@ use crate::{
     age_of_war::Age,
     consts::HUD_LAYER,
     event::{BaseAdvanceAgeEvent, QueueTimerFinishedEvent, UnitSpawnEvent},
+    resource_paths,
 };
 
 mod menu;
@@ -75,7 +76,7 @@ fn timer_finished(
 }
 
 #[derive(Resource, Deref)]
-pub struct BaseAge(Age);
+pub struct BaseAge(pub Age);
 
 impl Default for BaseAge {
     fn default() -> Self {
@@ -83,17 +84,21 @@ impl Default for BaseAge {
     }
 }
 
-pub fn advance_age_observer(_advance_event: On<BaseAdvanceAgeEvent>, mut age: ResMut<BaseAge>) {
-    debug!("Advance age event");
-
-    match age.0 {
-        Age::StoneAge => {
-            age.0 = Age::Medival
-            // updpate buttons
-        }
-        Age::Medival => age.0 = Age::Renaissance,
-        Age::Renaissance => age.0 = Age::Modern,
-        Age::Modern => age.0 = Age::Future,
-        Age::Future => debug!("Already reached the last age"),
+pub fn advance_age_observer(
+    _advance_event: On<BaseAdvanceAgeEvent>,
+    age: Res<BaseAge>,
+    mut button_sets: ParamSet<(
+        Query<(&mut ImageNode, &UnitButtons)>,
+        Query<(&mut ImageNode, &TurretButtons)>,
+    )>,
+    asset_server: Res<AssetServer>,
+) {
+    debug!("hud advance age event");
+    for (mut image_node, unit_type) in button_sets.p0().iter_mut() {
+        image_node.image = asset_server.load(resource_paths::load_unit_buttons(age.0, unit_type.0))
+    }
+    for (mut image_node, turret_type) in button_sets.p1().iter_mut() {
+        image_node.image =
+            asset_server.load(resource_paths::load_turret_buttons(age.0, turret_type.0))
     }
 }
