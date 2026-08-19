@@ -82,11 +82,15 @@ pub fn setup_buttons(
     commands
         .spawn((
             Node {
-                width: percent(100),
+                width: percent(91),
                 height: percent(100),
                 flex_direction: FlexDirection::Column,
                 justify_content: JustifyContent::Start,
                 align_items: AlignItems::Start,
+                margin: UiRect {
+                    top: px(56),
+                    ..default()
+                },
                 ..default()
             },
             RenderLayers::layer(HUD_LAYER),
@@ -472,7 +476,6 @@ pub fn setup_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
         ImageNode::from(asset_server.load("hud_banners.png")),
         Node {
             width: percent(100),
-            // height: percent(100),
             ..default()
         },
         ZIndex(1),
