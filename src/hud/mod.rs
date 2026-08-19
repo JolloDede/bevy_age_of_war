@@ -20,6 +20,7 @@ impl Plugin for HudPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_camera);
 
+        app.add_systems(Startup, setup_hud);
         app.add_systems(Startup, setup_buttons);
         app.add_systems(
             Update,

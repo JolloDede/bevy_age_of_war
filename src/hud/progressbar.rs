@@ -49,6 +49,7 @@ pub fn setup_progressbar(mut commands: Commands) {
                 },
                 ..default()
             },
+            ZIndex(3),
             BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
             BorderColor::all(Color::WHITE),
             QueueTimer {

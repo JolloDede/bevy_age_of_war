@@ -90,6 +90,7 @@ pub fn setup_buttons(
                 ..default()
             },
             RenderLayers::layer(HUD_LAYER),
+            ZIndex(2),
         ))
         .with_children(|parent| {
             // First row
@@ -464,4 +465,16 @@ pub fn turret_button_system(
             }
         }
     }
+}
+
+pub fn setup_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn((
+        ImageNode::from(asset_server.load("hud_banners.png")),
+        Node {
+            width: percent(100),
+            // height: percent(100),
+            ..default()
+        },
+        ZIndex(1),
+    ));
 }

@@ -95,6 +95,7 @@ pub fn setup_queue(mut commands: Commands) {
                 ..default()
             },
             RenderLayers::layer(HUD_LAYER),
+            ZIndex(2),
             QueueRowMarker,
         ))
         .with_children(|parent| {
