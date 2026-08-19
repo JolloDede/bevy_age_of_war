@@ -295,24 +295,32 @@ pub fn setup_buttons(
                         )],
                     ));
                     row.spawn((
-                        default_node.clone(),
+                        default_node_bundle.clone(),
                         TurretButtons(TurretType::Medium),
-                        ImageNode::from(asset_server.load(resource_paths::load_turret_buttons(
-                            base_age.0,
-                            TurretType::Medium,
-                        ))),
-                        Button,
-                        BackgroundColor(Color::linear_rgb(0.0, 1.0, 0.5)),
+                        children![(
+                            Node {
+                                width: percent(80),
+                                height: percent(80),
+                                ..default()
+                            },
+                            ImageNode::from(asset_server.load(
+                                resource_paths::load_turret_buttons(base_age.0, TurretType::Medium,)
+                            )),
+                        )],
                     ));
                     row.spawn((
-                        default_node.clone(),
+                        default_node_bundle.clone(),
                         TurretButtons(TurretType::Large),
-                        ImageNode::from(asset_server.load(resource_paths::load_turret_buttons(
-                            base_age.0,
-                            TurretType::Large,
-                        ))),
-                        Button,
-                        BackgroundColor(Color::linear_rgb(0.0, 1.0, 0.5)),
+                        children![(
+                            Node {
+                                width: percent(80),
+                                height: percent(80),
+                                ..default()
+                            },
+                            ImageNode::from(asset_server.load(
+                                resource_paths::load_turret_buttons(base_age.0, TurretType::Large,)
+                            )),
+                        )],
                     ));
                     row.spawn((
                         default_node_bundle.clone(),
