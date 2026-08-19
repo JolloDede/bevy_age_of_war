@@ -27,3 +27,6 @@ pub const GROUND_Y: f32 = -(LEVEL_SIZE.y * 0.5) + (GROUND_HEIGHT * 0.8);
 pub const GROUND_HEIGHT: f32 = 50.0;
 
 pub const UNIT_COLOR: Color = Color::linear_rgb(1.0, 0.0, 1.0);
+
+pub const MENU_TEXT_COLOR: Color = Color::linear_rgb(1., 1., 0.);
+pub const MENU_TEXT: &str = "Menu";
