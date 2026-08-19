@@ -21,7 +21,10 @@ impl Plugin for HudPlugin {
         app.add_systems(Startup, spawn_camera);
 
         app.add_systems(Startup, setup_buttons);
-        app.add_systems(Update, menu_navigation_button_system);
+        app.add_systems(
+            Update,
+            menu_navigation_button_system.before(frame_button_system),
+        );
         app.add_systems(Update, main_button_system);
         app.add_systems(Update, unit_button_system);
         app.add_systems(Update, turret_button_system);

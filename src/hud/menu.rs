@@ -258,20 +258,7 @@ pub fn setup_buttons(
                             ))),
                         )],
                     ));
-                    row.spawn((
-                        default_node.clone(),
-                        //     UnitButtons(UnitType::Super),
-                        //     Button,
-                        //     BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
-                        //     children![(
-                        //         Text::new("Super Human"),
-                        //         TextFont {
-                        //             font_size: TEMP_BUTTON_FONT,
-                        //             ..default()
-                        //         },
-                        //         TextColor(Color::WHITE),
-                        //     )],
-                    ));
+                    row.spawn((default_node.clone(),));
                     row.spawn((
                         default_node_bundle.clone(),
                         MenuNavigationButtons::Back,
@@ -342,11 +329,10 @@ pub fn menu_navigation_button_system(
 ) {
     for (interaction, action, mut pressed) in action_query.iter_mut() {
         match *interaction {
-            Interaction::Hovered => {}
             Interaction::Pressed => {
                 pressed.0 = true;
             }
-            Interaction::None => {
+            _ => {
                 if pressed.0 {
                     pressed.0 = false;
                     match action {
