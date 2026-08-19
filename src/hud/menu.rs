@@ -22,7 +22,7 @@ pub enum ButtonGroup {
     Turrets,
 }
 
-#[derive(Component, Clone)]
+#[derive(Component, Clone, Copy)]
 pub enum MenuNavigationButtons {
     Unit,
     Turret,
@@ -42,6 +42,12 @@ pub struct UnitButtons(pub UnitType);
 #[derive(Component)]
 pub struct TurretButtons(pub TurretType);
 
+#[derive(Component, Clone, Copy)]
+pub struct ButtonPressed(pub bool);
+
+#[derive(Component, Clone, Copy)]
+pub struct FrameButton;
+
 pub fn setup_buttons(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -56,18 +62,21 @@ pub fn setup_buttons(
         align_items: AlignItems::Center,
         ..default()
     };
-
-    let back_bundle_unit = (
+    let default_node_bundle = (
         default_node.clone(),
-        ImageNode::from(asset_server.load("iconback.png")),
-        MenuNavigationButtons::Back,
+        ImageNode::from(asset_server.load("menu/frame.png")),
+        FrameButton,
         Button,
+        ButtonPressed(false),
     );
-    let back_bundle_turret = (
-        back_bundle_unit.0.clone(),
-        back_bundle_unit.1.clone(),
-        back_bundle_unit.2.clone(),
-        back_bundle_unit.3.clone(),
+
+    let back_arrow_child = (
+        Node {
+            width: percent(100),
+            height: percent(100),
+            ..default()
+        },
+        ImageNode::from(asset_server.load("menu/backarrow.png")),
     );
 
     // Root vertical container
@@ -99,73 +108,91 @@ pub fn setup_buttons(
                 ))
                 .with_children(|row| {
                     row.spawn((
-                        default_node.clone(),
+                        default_node_bundle.clone(),
                         MenuNavigationButtons::Unit,
-                        Button,
-                        BackgroundColor(Color::linear_rgb(1.0, 0.0, 0.0)),
                         children![(
-                            Text::new("Units"),
-                            TextFont {
-                                font_size: TEMP_BUTTON_FONT,
+                            Node {
+                                width: percent(100),
+                                height: percent(100),
                                 ..default()
                             },
-                            TextColor(Color::WHITE),
+                            ImageNode::from(asset_server.load("menu/unit.png"),),
                         )],
                     ));
                     row.spawn((
-                        default_node.clone(),
+                        default_node_bundle.clone(),
                         MenuNavigationButtons::Turret,
-                        Button,
-                        BackgroundColor(Color::linear_rgb(1.0, 0.0, 0.0)),
                         children![(
-                            Text::new("Turrets"),
-                            TextFont {
-                                font_size: TEMP_BUTTON_FONT,
+                            Node {
+                                width: percent(100),
+                                height: percent(100),
                                 ..default()
                             },
-                            TextColor(Color::WHITE),
+                            ImageNode::from(asset_server.load("menu/turret.png"),),
                         )],
                     ));
                     row.spawn((
-                        default_node.clone(),
+                        default_node_bundle.clone(),
                         MenuActionButton::SelTurret,
-                        Button,
-                        BackgroundColor(Color::linear_rgb(1.0, 0.0, 0.0)),
                         children![(
-                            Text::new("Sel Turret"),
-                            TextFont {
-                                font_size: TEMP_BUTTON_FONT,
+                            Node {
+                                width: percent(100),
+                                height: percent(100),
                                 ..default()
                             },
-                            TextColor(Color::WHITE),
+                            ImageNode::from(asset_server.load("menu/turret.png"),),
+                            children![(
+                                Node {
+                                    margin: UiRect::all(px(8.)),
+                                    ..default()
+                                },
+                                Text::new("$"),
+                                TextColor::from(Color::linear_rgb(0., 1., 0.)),
+                                TextFont {
+                                    font_size: 20.,
+                                    ..default()
+                                },
+                            )]
                         )],
                     ));
                     row.spawn((
-                        default_node.clone(),
+                        default_node_bundle.clone(),
                         MenuActionButton::UpgradeBase,
-                        Button,
-                        BackgroundColor(Color::linear_rgb(1.0, 0.0, 0.0)),
                         children![(
-                            Text::new("Upgrade base"),
-                            TextFont {
-                                font_size: TEMP_BUTTON_FONT,
+                            Node {
+                                width: percent(100),
+                                height: percent(100),
                                 ..default()
                             },
-                            TextColor(Color::WHITE),
+                            ImageNode::from(asset_server.load("menu/turret.png"),),
+                            children![(
+                                Node {
+                                    margin: UiRect {
+                                        left: px(4.),
+                                        top: px(-2),
+                                        ..default()
+                                    },
+                                    ..default()
+                                },
+                                Text::new("+"),
+                                TextColor::from(Color::linear_rgb(0., 1., 0.)),
+                                TextFont {
+                                    font_size: 40.,
+                                    ..default()
+                                },
+                            )]
                         )],
                     ));
                     row.spawn((
-                        default_node.clone(),
+                        default_node_bundle.clone(),
                         MenuActionButton::AdvanceAge,
-                        Button,
-                        BackgroundColor(Color::linear_rgb(1.0, 0.0, 0.0)),
                         children![(
-                            Text::new("Advance Age"),
-                            TextFont {
-                                font_size: TEMP_BUTTON_FONT,
+                            Node {
+                                width: percent(100),
+                                height: percent(100),
                                 ..default()
                             },
-                            TextColor(Color::WHITE),
+                            ImageNode::from(asset_server.load("menu/advance.png"),),
                         )],
                     ));
                 });
@@ -186,47 +213,70 @@ pub fn setup_buttons(
                 ))
                 .with_children(|row| {
                     row.spawn((
-                        default_node.clone(),
-                        ImageNode::from(asset_server.load(resource_paths::load_unit_buttons(
-                            base_age.0,
-                            UnitType::Meele,
-                        ))),
+                        default_node_bundle.clone(),
                         UnitButtons(UnitType::Meele),
-                        Button,
+                        children![(
+                            Node {
+                                margin: UiRect::left(px(10)),
+                                width: percent(60),
+                                height: percent(60),
+                                ..default()
+                            },
+                            ImageNode::from(asset_server.load(resource_paths::load_unit_buttons(
+                                base_age.0,
+                                UnitType::Meele,
+                            ))),
+                        )],
                     ));
                     row.spawn((
-                        default_node.clone(),
-                        ImageNode::from(asset_server.load(resource_paths::load_unit_buttons(
-                            base_age.0,
-                            UnitType::Ranged,
-                        ))),
+                        default_node_bundle.clone(),
                         UnitButtons(UnitType::Ranged),
-                        Button,
+                        children![(
+                            Node {
+                                width: percent(100),
+                                height: percent(100),
+                                ..default()
+                            },
+                            ImageNode::from(asset_server.load(resource_paths::load_unit_buttons(
+                                base_age.0,
+                                UnitType::Ranged,
+                            ))),
+                        )],
+                    ));
+                    row.spawn((
+                        default_node_bundle.clone(),
+                        UnitButtons(UnitType::Tank),
+                        children![(
+                            Node {
+                                width: percent(80),
+                                height: percent(80),
+                                ..default()
+                            },
+                            ImageNode::from(asset_server.load(resource_paths::load_unit_buttons(
+                                base_age.0,
+                                UnitType::Tank,
+                            ))),
+                        )],
                     ));
                     row.spawn((
                         default_node.clone(),
-                        ImageNode::from(asset_server.load(resource_paths::load_unit_buttons(
-                            base_age.0,
-                            UnitType::Tank,
-                        ))),
-                        UnitButtons(UnitType::Tank),
-                        Button,
+                        //     UnitButtons(UnitType::Super),
+                        //     Button,
+                        //     BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
+                        //     children![(
+                        //         Text::new("Super Human"),
+                        //         TextFont {
+                        //             font_size: TEMP_BUTTON_FONT,
+                        //             ..default()
+                        //         },
+                        //         TextColor(Color::WHITE),
+                        //     )],
                     ));
-                    // row.spawn((
-                    //     default_node.clone(),
-                    //     UnitButtons(UnitType::Super),
-                    //     Button,
-                    //     BackgroundColor(Color::linear_rgb(0.0, 0.5, 1.0)),
-                    //     children![(
-                    //         Text::new("Super Human"),
-                    //         TextFont {
-                    //             font_size: TEMP_BUTTON_FONT,
-                    //             ..default()
-                    //         },
-                    //         TextColor(Color::WHITE),
-                    //     )],
-                    // ));
-                    row.spawn(back_bundle_unit);
+                    row.spawn((
+                        default_node_bundle.clone(),
+                        MenuNavigationButtons::Back,
+                        children![(back_arrow_child.clone())],
+                    ));
                 });
 
             // Third row
@@ -274,48 +324,83 @@ pub fn setup_buttons(
                         Button,
                         BackgroundColor(Color::linear_rgb(0.0, 1.0, 0.5)),
                     ));
-                    row.spawn(back_bundle_turret);
+                    row.spawn((
+                        default_node_bundle.clone(),
+                        MenuNavigationButtons::Back,
+                        children![(back_arrow_child.clone())],
+                    ));
                 });
         });
 }
 
 pub fn menu_navigation_button_system(
-    action_query: Query<
-        (&Interaction, &MenuNavigationButtons),
+    mut action_query: Query<
+        (&Interaction, &MenuNavigationButtons, &mut ButtonPressed),
         (Changed<Interaction>, With<Button>),
     >,
     mut button_groups: Query<(&ButtonGroup, &mut Node)>,
 ) {
-    for (interaction, action) in action_query {
-        if *interaction == Interaction::Pressed {
-            match action {
-                MenuNavigationButtons::Unit => {
-                    for (group, mut node) in &mut button_groups {
-                        node.display = match group {
-                            ButtonGroup::Main => Display::None,
-                            ButtonGroup::Units => Display::Flex,
-                            ButtonGroup::Turrets => Display::None,
-                        };
+    for (interaction, action, mut pressed) in action_query.iter_mut() {
+        match *interaction {
+            Interaction::Hovered => {}
+            Interaction::Pressed => {
+                pressed.0 = true;
+            }
+            Interaction::None => {
+                if pressed.0 {
+                    pressed.0 = false;
+                    match action {
+                        MenuNavigationButtons::Unit => {
+                            for (group, mut node) in &mut button_groups {
+                                node.display = match group {
+                                    ButtonGroup::Main => Display::None,
+                                    ButtonGroup::Units => Display::Flex,
+                                    ButtonGroup::Turrets => Display::None,
+                                };
+                            }
+                        }
+                        MenuNavigationButtons::Turret => {
+                            for (group, mut node) in &mut button_groups {
+                                node.display = match group {
+                                    ButtonGroup::Main => Display::None,
+                                    ButtonGroup::Units => Display::None,
+                                    ButtonGroup::Turrets => Display::Flex,
+                                };
+                            }
+                        }
+                        MenuNavigationButtons::Back => {
+                            for (group, mut node) in &mut button_groups {
+                                node.display = match group {
+                                    ButtonGroup::Main => Display::Flex,
+                                    ButtonGroup::Units => Display::None,
+                                    ButtonGroup::Turrets => Display::None,
+                                };
+                            }
+                        }
                     }
                 }
-                MenuNavigationButtons::Turret => {
-                    for (group, mut node) in &mut button_groups {
-                        node.display = match group {
-                            ButtonGroup::Main => Display::None,
-                            ButtonGroup::Units => Display::None,
-                            ButtonGroup::Turrets => Display::Flex,
-                        };
-                    }
-                }
-                MenuNavigationButtons::Back => {
-                    for (group, mut node) in &mut button_groups {
-                        node.display = match group {
-                            ButtonGroup::Main => Display::Flex,
-                            ButtonGroup::Units => Display::None,
-                            ButtonGroup::Turrets => Display::None,
-                        };
-                    }
-                }
+            }
+        }
+    }
+}
+
+pub fn frame_button_system(
+    mut action_query: Query<
+        (&Interaction, &mut ImageNode),
+        (Changed<Interaction>, With<FrameButton>),
+    >,
+    asset_server: Res<AssetServer>,
+) {
+    for (interaction, mut sprite) in action_query.iter_mut() {
+        match *interaction {
+            Interaction::Pressed => {
+                sprite.image = asset_server.load("menu/frame_click.png");
+            }
+            Interaction::Hovered => {
+                sprite.image = asset_server.load("menu/frame_hover.png");
+            }
+            Interaction::None => {
+                sprite.image = asset_server.load("menu/frame.png");
             }
         }
     }

@@ -25,6 +25,7 @@ impl Plugin for HudPlugin {
         app.add_systems(Update, main_button_system);
         app.add_systems(Update, unit_button_system);
         app.add_systems(Update, turret_button_system);
+        app.add_systems(Update, frame_button_system);
 
         app.add_systems(Startup, setup_queue);
         app.add_systems(Update, queue_system);
