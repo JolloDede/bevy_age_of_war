@@ -13,7 +13,6 @@ use crate::{
 };
 
 const ACTION_BUTTON_SIZE: Vec2 = Vec2::new(60., 60.);
-const TEMP_BUTTON_FONT: f32 = 12.0;
 
 #[derive(Component)]
 pub enum ButtonGroup {
@@ -218,8 +217,8 @@ pub fn setup_buttons(
                         children![(
                             Node {
                                 margin: UiRect::left(px(10)),
-                                width: percent(60),
-                                height: percent(60),
+                                width: percent(100),
+                                height: percent(100),
                                 ..default()
                             },
                             ImageNode::from(asset_server.load(resource_paths::load_unit_buttons(
@@ -282,14 +281,18 @@ pub fn setup_buttons(
                 ))
                 .with_children(|row| {
                     row.spawn((
-                        default_node.clone(),
-                        ImageNode::from(asset_server.load(resource_paths::load_turret_buttons(
-                            base_age.0,
-                            TurretType::Small,
-                        ))),
+                        default_node_bundle.clone(),
                         TurretButtons(TurretType::Small),
-                        Button,
-                        BackgroundColor(Color::linear_rgb(0.0, 1.0, 0.5)),
+                        children![(
+                            Node {
+                                width: percent(80),
+                                height: percent(80),
+                                ..default()
+                            },
+                            ImageNode::from(asset_server.load(
+                                resource_paths::load_turret_buttons(base_age.0, TurretType::Small,)
+                            )),
+                        )],
                     ));
                     row.spawn((
                         default_node.clone(),
