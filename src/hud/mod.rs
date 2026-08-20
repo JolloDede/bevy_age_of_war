@@ -3,7 +3,7 @@ use strum::EnumIter;
 
 use crate::{
     age_of_war::Age,
-    consts::HUD_LAYER,
+    consts::*,
     event::{BaseAdvanceAgeEvent, QueueTimerFinishedEvent, UnitSpawnEvent},
     resource_paths,
 };
@@ -33,12 +33,13 @@ impl Plugin for HudPlugin {
         app.add_systems(Update, frame_button_system);
         app.add_observer(advance_age_observer);
 
-        app.add_systems(Startup, setup_queue);
-        app.add_systems(Update, queue_system);
-        app.add_observer(unit_queue_observer);
+        {
+            app.add_systems(Startup, setup_unit_training);
+            app.add_systems(Update, queue_system);
+            app.add_observer(unit_queue_observer);
 
-        app.add_systems(Startup, setup_progressbar);
-        app.add_systems(Update, progressbar_system);
+            app.add_systems(Update, progressbar_system);
+        }
 
         app.add_observer(timer_finished);
 
@@ -116,6 +117,87 @@ pub fn advance_age_observer(
             }
         }
     }
+}
+
+fn setup_unit_training(mut commands: Commands) {
+    let container = commands
+        .spawn((Node {
+            width: percent(43),
+            height: px(20),
+            position_type: PositionType::Absolute,
+            left: percent(20),
+            top: percent(2),
+            flex_direction: FlexDirection::Row,
+            column_gap: px(4),
+            align_items: AlignItems::Center,
+            ..default()
+        },))
+        .id();
+
+    let progress = commands
+        .spawn((
+            Node {
+                height: px(PROGRESSBAR_HEIGHT),
+                border: UiRect::all(px(2.0)),
+                flex_grow: 1.,
+                ..default()
+            },
+            ZIndex(3),
+            BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
+            BorderColor::all(Color::WHITE),
+            QueueTimer {
+                timer: Timer::from_seconds(0.0, TimerMode::Once),
+                unit: None,
+            },
+        ))
+        .with_children(|parent| {
+            parent.spawn((
+                Node {
+                    width: Val::Percent(0.0),
+                    height: Val::Percent(100.0),
+                    ..default()
+                },
+                BackgroundColor(Color::srgb(0.0, 0.7, 0.3)),
+                ProgressbarFill,
+            ));
+        })
+        .id();
+
+    let queue = commands
+        .spawn((
+            Node {
+                column_gap: px(2),
+                flex_direction: FlexDirection::Row,
+                justify_content: JustifyContent::Start,
+                align_items: AlignItems::Start,
+                ..default()
+            },
+            RenderLayers::layer(HUD_LAYER),
+            ZIndex(2),
+            QueueRowMarker,
+        ))
+        .with_children(|parent| {
+            for i in 0..MAX_QUEUE_SIZE {
+                parent.spawn((
+                    Node {
+                        width: px(QUEUE_RECT_WIDTH),
+                        height: px(QUEUE_RECT_HEIGHT),
+                        border: UiRect::all(px(2)),
+                        border_radius: BorderRadius::ZERO,
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        ..default()
+                    },
+                    BorderColor::from(QUEUE_BORDER_COLOR),
+                    BackgroundColor::from(QUEUE_COLOR),
+                    QueueIndex(i),
+                ));
+            }
+        })
+        .id();
+
+    commands.entity(container).add_child(progress);
+    commands.entity(container).add_child(queue);
 }
 
 #[derive(Component, EnumIter, Clone, Copy, PartialEq)]

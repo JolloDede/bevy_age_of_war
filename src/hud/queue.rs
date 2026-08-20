@@ -75,48 +75,7 @@ pub struct QueueRowMarker;
 const MAX_QUEUE_SIZE: usize = 5;
 
 #[derive(Component, Deref)]
-pub struct QueueIndex(usize);
-
-pub fn setup_queue(mut commands: Commands) {
-    commands
-        .spawn((
-            Node {
-                width: percent(100),
-                height: percent(100),
-                column_gap: px(2),
-                flex_direction: FlexDirection::Row,
-                justify_content: JustifyContent::Start,
-                align_items: AlignItems::Start,
-                margin: UiRect {
-                    top: (px(QUEUE_MARGIN_TOP)),
-                    left: (px(QUEUE_MARGIN_LEFT)),
-                    ..Default::default()
-                },
-                ..default()
-            },
-            RenderLayers::layer(HUD_LAYER),
-            ZIndex(2),
-            QueueRowMarker,
-        ))
-        .with_children(|parent| {
-            for i in 0..MAX_QUEUE_SIZE {
-                parent.spawn((
-                    Node {
-                        width: px(QUEUE_RECT_WIDTH),
-                        height: px(QUEUE_RECT_HEIGHT),
-                        border: UiRect::all(px(2)),
-                        border_radius: BorderRadius::ZERO,
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::Center,
-                        ..default()
-                    },
-                    BorderColor::from(QUEUE_BORDER_COLOR),
-                    BackgroundColor::from(QUEUE_COLOR),
-                    QueueIndex(i),
-                ));
-            }
-        });
-}
+pub struct QueueIndex(pub usize);
 
 pub fn queue_system(
     queue: ResMut<EntityQueue>,

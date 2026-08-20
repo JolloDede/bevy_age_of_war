@@ -30,46 +30,6 @@ impl QueueTimer {
 #[derive(Component)]
 pub struct ProgressbarFill;
 
-const PROGRESSBAR_QUEUE_PADDING: f32 = 2.0;
-const PROGRESSBAR_HEIGHT: i32 = 10;
-
-pub fn setup_progressbar(mut commands: Commands) {
-    commands
-        .spawn((
-            Node {
-                width: px(400.0),
-                height: px(PROGRESSBAR_HEIGHT),
-                border: UiRect::all(px(2.0)),
-                margin: UiRect {
-                    top: px(QUEUE_MARGIN_TOP
-                        + QUEUE_RECT_HEIGHT as f32
-                        + PROGRESSBAR_QUEUE_PADDING),
-                    left: px(QUEUE_MARGIN_LEFT),
-                    ..Default::default()
-                },
-                ..default()
-            },
-            ZIndex(3),
-            BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
-            BorderColor::all(Color::WHITE),
-            QueueTimer {
-                timer: Timer::from_seconds(0.0, TimerMode::Once),
-                unit: None,
-            },
-        ))
-        .with_children(|parent| {
-            parent.spawn((
-                Node {
-                    width: Val::Percent(0.0),
-                    height: Val::Percent(100.0),
-                    ..default()
-                },
-                BackgroundColor(Color::srgb(0.0, 0.7, 0.3)),
-                ProgressbarFill,
-            ));
-        });
-}
-
 pub fn progressbar_system(
     mut commands: Commands,
     time: Res<Time>,

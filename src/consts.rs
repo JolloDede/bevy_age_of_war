@@ -13,6 +13,10 @@ pub const QUEUE_RECT_WIDTH: i32 = 20;
 pub const QUEUE_RECT_HEIGHT: i32 = 20;
 pub const QUEUE_MARGIN_TOP: f32 = 20.0;
 pub const QUEUE_MARGIN_LEFT: f32 = 20.0;
+pub const MAX_QUEUE_SIZE: usize = 5;
+
+pub const PROGRESSBAR_QUEUE_PADDING: f32 = 2.0;
+pub const PROGRESSBAR_HEIGHT: i32 = 10;
 
 pub const LEVEL_SIZE: Vec2 = Vec2::new(1520., 504.);
 pub const LEVEL_START: f32 = -(LEVEL_SIZE.x * 0.5);
