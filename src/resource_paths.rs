@@ -1,4 +1,9 @@
-use crate::{age_of_war::Age, game_turret::TurretType, game_unit::UnitType};
+use crate::{
+    age_of_war::Age,
+    game_turret::TurretType,
+    game_unit::UnitType,
+    hud::{MenuActionButton, MenuNavigationButton},
+};
 
 pub fn load_unit_buttons(age: Age, unit_type: UnitType) -> String {
     let mut res = String::from("unit/icon");
@@ -78,6 +83,33 @@ pub fn load_base(age: Age) -> String {
         Age::Modern => res.push('4'),
         Age::Future => res.push('5'),
     };
+
+    res.push_str(".png");
+
+    return res;
+}
+
+pub fn load_nav_icons(button: MenuNavigationButton) -> String {
+    let mut res = String::from("menu/");
+
+    res.push_str(match button {
+        MenuNavigationButton::Unit => "unit",
+        MenuNavigationButton::Turret | MenuNavigationButton::SelTurret => "turret",
+        MenuNavigationButton::Back => "backarrow",
+    });
+
+    res.push_str(".png");
+
+    return res;
+}
+
+pub fn load_action_icons(button: MenuActionButton) -> String {
+    let mut res = String::from("menu/");
+
+    res.push_str(match button {
+        MenuActionButton::UpgradeBase => "turret",
+        MenuActionButton::AdvanceAge => "advance",
+    });
 
     res.push_str(".png");
 

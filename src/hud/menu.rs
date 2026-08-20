@@ -8,31 +8,27 @@ use crate::{
     event::{BaseAdvanceAgeEvent, UnitQueueEvent},
     game_turret::TurretType,
     game_unit::{GameUnit, UnitType},
-    hud::BaseAge,
-    resource_paths,
+    hud::{
+        BaseAge, MenuActionButton, MenuNavigationButton,
+        menu::{
+            component::{arrow_node, place_holder},
+            main_buttons::{action_buttons, navigation_buttons},
+            turret_buttons::turret_button_spawner,
+            unit_buttons::unit_button_spawner,
+        },
+    },
 };
 
-const ACTION_BUTTON_SIZE: Vec2 = Vec2::new(60., 60.);
+mod component;
+mod main_buttons;
+mod turret_buttons;
+mod unit_buttons;
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub enum ButtonGroup {
     Main,
     Units,
     Turrets,
-}
-
-#[derive(Component, Clone, Copy)]
-pub enum MenuNavigationButtons {
-    Unit,
-    Turret,
-    Back,
-}
-
-#[derive(Component)]
-pub enum MenuActionButton {
-    SelTurret,
-    UpgradeBase,
-    AdvanceAge,
 }
 
 #[derive(Component)]
@@ -50,311 +46,103 @@ pub struct FrameButton;
 #[derive(Component)]
 pub struct MenuText;
 
+#[derive(Component)]
+pub struct PlaceHolderComp;
+
 pub fn setup_buttons(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     base_age: Res<BaseAge>,
 ) {
-    let default_node = Node {
-        width: px(ACTION_BUTTON_SIZE.x),
-        height: px(ACTION_BUTTON_SIZE.y),
-        border: UiRect::all(px(5)),
-        border_radius: BorderRadius::ZERO,
-        justify_content: JustifyContent::Center,
-        align_items: AlignItems::Center,
-        ..default()
-    };
-    let default_node_bundle = (
-        default_node.clone(),
-        ImageNode::from(asset_server.load("menu/frame.png")),
-        FrameButton,
-        Button,
-        ButtonPressed(false),
-    );
+    let menu_container = commands
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                left: percent(67),
+                top: px(30),
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Start,
+                ..default()
+            },
+            RenderLayers::layer(HUD_LAYER),
+            ZIndex(2),
+        ))
+        .id();
 
-    let back_arrow_child = (
-        Node {
-            width: percent(100),
-            height: percent(100),
-            ..default()
-        },
-        ImageNode::from(asset_server.load("menu/backarrow.png")),
-    );
+    let menu_text = commands
+        .spawn((MenuText, Text::new(MENU_TEXT), TextColor(MENU_TEXT_COLOR)))
+        .id();
 
-    commands.spawn((
-        MenuText,
-        Text::new(MENU_TEXT),
-        TextColor(MENU_TEXT_COLOR),
-        Node {
-            position_type: PositionType::Absolute,
-            left: percent(67),
-            top: px(40),
-            ..default()
-        },
-        ZIndex(2),
-    ));
-
-    let mut button_container = commands.spawn((
-        Node {
-            width: percent(91),
-            height: percent(100),
+    let button_container = commands
+        .spawn((Node {
             flex_direction: FlexDirection::Column,
-            justify_content: JustifyContent::Start,
-            align_items: AlignItems::Start,
-            margin: UiRect {
-                top: px(56),
-                ..default()
-            },
+            align_items: AlignItems::Center,
             ..default()
-        },
-        RenderLayers::layer(HUD_LAYER),
-        ZIndex(2),
+        },))
+        .id();
+
+    commands
+        .entity(menu_container)
+        .add_children(&[menu_text, button_container]);
+
+    let mut main_buttons = Vec::with_capacity(5);
+
+    main_buttons.append(&mut navigation_buttons(&mut commands, &asset_server));
+    main_buttons.append(&mut action_buttons(&mut commands, &asset_server));
+
+    let main = commands.spawn((Node::DEFAULT, ButtonGroup::Main)).id();
+    commands.entity(main).add_children(&main_buttons);
+    commands.entity(button_container).add_child(main);
+
+    // Units
+    let mut unit_buttons = Vec::with_capacity(5);
+
+    unit_buttons.append(&mut unit_button_spawner(
+        &mut commands,
+        &asset_server,
+        base_age.0,
     ));
+    unit_buttons.push(arrow_node(&mut commands, &asset_server));
 
-    button_container.with_children(|parent| {
-        let mut first_row = parent.spawn((
+    let unit = commands
+        .spawn((
             Node {
-                width: percent(100),
-                height: px(ACTION_BUTTON_SIZE.y + 10.),
-                flex_direction: FlexDirection::Row,
-                justify_content: JustifyContent::End,
-                align_items: AlignItems::Center,
-                ..default()
-            },
-            ButtonGroup::Main,
-        ));
-
-        first_row.with_children(|row| {
-            row.spawn((
-                default_node_bundle.clone(),
-                MenuNavigationButtons::Unit,
-                children![(
-                    Node {
-                        width: percent(100),
-                        height: percent(100),
-                        ..default()
-                    },
-                    ImageNode::from(asset_server.load("menu/unit.png"),),
-                )],
-            ));
-            row.spawn((
-                default_node_bundle.clone(),
-                MenuNavigationButtons::Turret,
-                children![(
-                    Node {
-                        width: percent(100),
-                        height: percent(100),
-                        ..default()
-                    },
-                    ImageNode::from(asset_server.load("menu/turret.png"),),
-                )],
-            ));
-            row.spawn((
-                default_node_bundle.clone(),
-                MenuActionButton::SelTurret,
-                children![(
-                    Node {
-                        width: percent(100),
-                        height: percent(100),
-                        ..default()
-                    },
-                    ImageNode::from(asset_server.load("menu/turret.png"),),
-                    children![(
-                        Node {
-                            margin: UiRect::all(px(8.)),
-                            ..default()
-                        },
-                        Text::new("$"),
-                        TextColor::from(Color::linear_rgb(0., 1., 0.)),
-                        TextFont {
-                            font_size: 20.,
-                            ..default()
-                        },
-                    )]
-                )],
-            ));
-            row.spawn((
-                default_node_bundle.clone(),
-                MenuActionButton::UpgradeBase,
-                children![(
-                    Node {
-                        width: percent(100),
-                        height: percent(100),
-                        ..default()
-                    },
-                    ImageNode::from(asset_server.load("menu/turret.png"),),
-                    children![(
-                        Node {
-                            margin: UiRect {
-                                left: px(4.),
-                                top: px(-2),
-                                ..default()
-                            },
-                            ..default()
-                        },
-                        Text::new("+"),
-                        TextColor::from(Color::linear_rgb(0., 1., 0.)),
-                        TextFont {
-                            font_size: 40.,
-                            ..default()
-                        },
-                    )]
-                )],
-            ));
-            row.spawn((
-                default_node_bundle.clone(),
-                MenuActionButton::AdvanceAge,
-                children![(
-                    Node {
-                        width: percent(100),
-                        height: percent(100),
-                        ..default()
-                    },
-                    ImageNode::from(asset_server.load("menu/advance.png"),),
-                )],
-            ));
-        });
-
-        let mut second_row = parent.spawn((
-            Node {
-                width: percent(100),
-                height: px(ACTION_BUTTON_SIZE.y + 10.),
-                flex_direction: FlexDirection::Row,
-                justify_content: JustifyContent::End,
-                align_items: AlignItems::Center,
                 display: Display::None,
                 ..default()
             },
             ButtonGroup::Units,
-        ));
+        ))
+        .id();
+    commands.entity(unit).add_children(&unit_buttons);
+    commands.entity(button_container).add_child(unit);
 
-        second_row.with_children(|row| {
-            row.spawn((
-                default_node_bundle.clone(),
-                UnitButtons(UnitType::Meele),
-                children![(
-                    Node {
-                        margin: UiRect::left(px(10)),
-                        width: percent(100),
-                        height: percent(100),
-                        ..default()
-                    },
-                    ImageNode::from(asset_server.load(resource_paths::load_unit_buttons(
-                        base_age.0,
-                        UnitType::Meele,
-                    ))),
-                )],
-            ));
-            row.spawn((
-                default_node_bundle.clone(),
-                UnitButtons(UnitType::Ranged),
-                children![(
-                    Node {
-                        width: percent(100),
-                        height: percent(100),
-                        ..default()
-                    },
-                    ImageNode::from(asset_server.load(resource_paths::load_unit_buttons(
-                        base_age.0,
-                        UnitType::Ranged,
-                    ))),
-                )],
-            ));
-            row.spawn((
-                default_node_bundle.clone(),
-                UnitButtons(UnitType::Tank),
-                children![(
-                    Node {
-                        width: percent(80),
-                        height: percent(80),
-                        ..default()
-                    },
-                    ImageNode::from(asset_server.load(resource_paths::load_unit_buttons(
-                        base_age.0,
-                        UnitType::Tank,
-                    ))),
-                )],
-            ));
-            row.spawn((default_node.clone(),));
-            row.spawn((
-                default_node_bundle.clone(),
-                MenuNavigationButtons::Back,
-                children![(back_arrow_child.clone())],
-            ));
-        });
+    // Turrets
+    let mut turret_buttons = Vec::with_capacity(5);
 
-        let mut third_row = parent.spawn((
+    turret_buttons.append(&mut turret_button_spawner(
+        &mut commands,
+        &asset_server,
+        base_age.0,
+    ));
+    turret_buttons.push(place_holder::<PlaceHolderComp>(&mut commands, None));
+    turret_buttons.push(arrow_node(&mut commands, &asset_server));
+
+    let unit = commands
+        .spawn((
             Node {
-                width: percent(100),
-                height: px(ACTION_BUTTON_SIZE.y + 10.),
-                flex_direction: FlexDirection::Row,
-                justify_content: JustifyContent::End,
-                align_items: AlignItems::Center,
                 display: Display::None,
                 ..default()
             },
             ButtonGroup::Turrets,
-        ));
-
-        third_row.with_children(|row| {
-            row.spawn((
-                default_node_bundle.clone(),
-                TurretButtons(TurretType::Small),
-                children![(
-                    Node {
-                        width: percent(80),
-                        height: percent(80),
-                        ..default()
-                    },
-                    ImageNode::from(asset_server.load(resource_paths::load_turret_buttons(
-                        base_age.0,
-                        TurretType::Small,
-                    ))),
-                )],
-            ));
-            row.spawn((
-                default_node_bundle.clone(),
-                TurretButtons(TurretType::Medium),
-                children![(
-                    Node {
-                        width: percent(80),
-                        height: percent(80),
-                        ..default()
-                    },
-                    ImageNode::from(asset_server.load(resource_paths::load_turret_buttons(
-                        base_age.0,
-                        TurretType::Medium,
-                    ))),
-                )],
-            ));
-            row.spawn((
-                default_node_bundle.clone(),
-                TurretButtons(TurretType::Large),
-                children![(
-                    Node {
-                        width: percent(80),
-                        height: percent(80),
-                        ..default()
-                    },
-                    ImageNode::from(asset_server.load(resource_paths::load_turret_buttons(
-                        base_age.0,
-                        TurretType::Large,
-                    ))),
-                )],
-            ));
-            row.spawn((default_node.clone(),));
-            row.spawn((
-                default_node_bundle.clone(),
-                MenuNavigationButtons::Back,
-                children![(back_arrow_child.clone())],
-            ));
-        });
-    });
+        ))
+        .id();
+    commands.entity(unit).add_children(&turret_buttons);
+    commands.entity(button_container).add_child(unit);
 }
 
 pub fn menu_navigation_button_system(
     mut action_query: Query<
-        (&Interaction, &MenuNavigationButtons, &mut ButtonPressed),
+        (&Interaction, &MenuNavigationButton, &mut ButtonPressed),
         (Changed<Interaction>, With<Button>),
     >,
     mut button_groups: Query<(&ButtonGroup, &mut Node)>,
@@ -369,9 +157,10 @@ pub fn menu_navigation_button_system(
                 if pressed.0 {
                     pressed.0 = false;
                     match action {
-                        MenuNavigationButtons::Unit => {
+                        MenuNavigationButton::Unit => {
                             menu_text.0 = "Menu - Units".to_string();
                             for (group, mut node) in &mut button_groups {
+                                debug!("Found any buttongroups {:?} {:?}", group, node.display);
                                 node.display = match group {
                                     ButtonGroup::Main => Display::None,
                                     ButtonGroup::Units => Display::Flex,
@@ -379,7 +168,7 @@ pub fn menu_navigation_button_system(
                                 };
                             }
                         }
-                        MenuNavigationButtons::Turret => {
+                        MenuNavigationButton::Turret => {
                             menu_text.0 = "Menu - Turrets".to_string();
                             for (group, mut node) in &mut button_groups {
                                 node.display = match group {
@@ -389,7 +178,10 @@ pub fn menu_navigation_button_system(
                                 };
                             }
                         }
-                        MenuNavigationButtons::Back => {
+                        MenuNavigationButton::SelTurret => {
+                            todo!()
+                        }
+                        MenuNavigationButton::Back => {
                             menu_text.0 = MENU_TEXT.to_string();
                             for (group, mut node) in &mut button_groups {
                                 node.display = match group {
@@ -436,9 +228,6 @@ pub fn main_button_system(
     for (interaction, action) in action_query.iter() {
         if *interaction == Interaction::Pressed {
             match action {
-                MenuActionButton::SelTurret => {
-                    println!("Sel turret")
-                }
                 MenuActionButton::UpgradeBase => {
                     println!("Upgrade base")
                 }

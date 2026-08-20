@@ -1,6 +1,8 @@
 // use bevy::prelude::*;
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+use strum::EnumIter;
+
+#[derive(EnumIter, Debug, PartialEq, Clone, Copy)]
 pub enum TurretType {
     Small,
     Medium,

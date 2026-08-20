@@ -30,3 +30,4 @@ pub const UNIT_COLOR: Color = Color::linear_rgb(1.0, 0.0, 1.0);
 
 pub const MENU_TEXT_COLOR: Color = Color::linear_rgb(1., 1., 0.);
 pub const MENU_TEXT: &str = "Menu";
+pub const ACTION_BUTTON_SIZE: Vec2 = Vec2::new(60., 60.);

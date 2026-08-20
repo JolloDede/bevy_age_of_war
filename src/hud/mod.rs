@@ -1,4 +1,5 @@
 use bevy::{camera::visibility::RenderLayers, prelude::*};
+use strum::EnumIter;
 
 use crate::{
     age_of_war::Age,
@@ -115,4 +116,18 @@ pub fn advance_age_observer(
             }
         }
     }
+}
+
+#[derive(Component, EnumIter, Clone, Copy, PartialEq)]
+pub enum MenuNavigationButton {
+    Unit,
+    Turret,
+    SelTurret,
+    Back,
+}
+
+#[derive(Component, EnumIter, Clone, Copy, PartialEq)]
+pub enum MenuActionButton {
+    UpgradeBase,
+    AdvanceAge,
 }

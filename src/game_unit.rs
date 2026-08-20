@@ -2,6 +2,7 @@ use rand::{
     RngExt,
     distr::{Distribution, StandardUniform},
 };
+use strum::EnumIter;
 
 use crate::age_of_war::Age;
 
@@ -20,7 +21,7 @@ impl GameUnit {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(EnumIter, Debug, PartialEq, Clone, Copy)]
 pub enum UnitType {
     Meele,
     Ranged,
