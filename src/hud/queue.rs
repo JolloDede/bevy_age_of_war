@@ -1,6 +1,6 @@
 use std::{collections::VecDeque, sync::Arc};
 
-use bevy::{camera::visibility::RenderLayers, prelude::*};
+use bevy::prelude::*;
 
 use crate::{consts::*, event::UnitQueueEvent, game_unit::GameUnit, hud::progressbar::QueueTimer};
 
@@ -71,8 +71,6 @@ impl QueueEntry {
 
 #[derive(Component)]
 pub struct QueueRowMarker;
-
-const MAX_QUEUE_SIZE: usize = 5;
 
 #[derive(Component, Deref)]
 pub struct QueueIndex(pub usize);

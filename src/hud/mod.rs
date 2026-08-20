@@ -121,17 +121,20 @@ pub fn advance_age_observer(
 
 fn setup_unit_training(mut commands: Commands) {
     let container = commands
-        .spawn((Node {
-            width: percent(43),
-            height: px(20),
-            position_type: PositionType::Absolute,
-            left: percent(20),
-            top: percent(2),
-            flex_direction: FlexDirection::Row,
-            column_gap: px(4),
-            align_items: AlignItems::Center,
-            ..default()
-        },))
+        .spawn((
+            Node {
+                width: percent(43),
+                height: px(20),
+                position_type: PositionType::Absolute,
+                left: percent(20),
+                top: percent(2),
+                flex_direction: FlexDirection::Row,
+                column_gap: px(4),
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            ZIndex(3),
+        ))
         .id();
 
     let progress = commands
@@ -143,8 +146,8 @@ fn setup_unit_training(mut commands: Commands) {
                 ..default()
             },
             ZIndex(3),
-            BackgroundColor(Color::srgb(0.1, 0.1, 0.1)),
-            BorderColor::all(Color::WHITE),
+            BackgroundColor(Color::linear_rgba(0., 0., 0., 0.)),
+            BorderColor::all(Color::BLACK),
             QueueTimer {
                 timer: Timer::from_seconds(0.0, TimerMode::Once),
                 unit: None,
@@ -157,7 +160,7 @@ fn setup_unit_training(mut commands: Commands) {
                     height: Val::Percent(100.0),
                     ..default()
                 },
-                BackgroundColor(Color::srgb(0.0, 0.7, 0.3)),
+                BackgroundColor(Color::linear_rgb(1.0, 0., 0.)),
                 ProgressbarFill,
             ));
         })
@@ -173,7 +176,6 @@ fn setup_unit_training(mut commands: Commands) {
                 ..default()
             },
             RenderLayers::layer(HUD_LAYER),
-            ZIndex(2),
             QueueRowMarker,
         ))
         .with_children(|parent| {

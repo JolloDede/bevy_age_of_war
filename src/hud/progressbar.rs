@@ -3,7 +3,6 @@ use std::{sync::Arc, time::Duration};
 use bevy::prelude::*;
 
 use crate::{
-    consts::{QUEUE_MARGIN_LEFT, QUEUE_MARGIN_TOP, QUEUE_RECT_HEIGHT},
     event::QueueTimerFinishedEvent,
     game_unit::{GameUnit, UnitType},
 };
@@ -33,24 +32,23 @@ pub struct ProgressbarFill;
 pub fn progressbar_system(
     mut commands: Commands,
     time: Res<Time>,
-    mut timer_query: Query<(&mut QueueTimer, &Children)>,
-    mut style_query: Query<&mut Node, With<ProgressbarFill>>,
+    timer_query: Single<&mut QueueTimer>,
+    style_query: Single<&mut Node, With<ProgressbarFill>>,
 ) {
-    for (mut bar, children) in timer_query.iter_mut() {
-        if bar.unit.is_none() {
-            return;
-        }
-        bar.timer.tick(time.delta());
+    let mut bar = timer_query.into_inner();
 
-        let percent = (1.0 - bar.timer.fraction()) * 100.0;
-        for &child in children {
-            if let Ok(mut node) = style_query.get_mut(child) {
-                node.width = Val::Percent(percent);
-            }
-        }
+    if bar.unit.is_none() {
+        return;
+    }
 
-        if bar.timer.just_finished() {
-            commands.trigger(QueueTimerFinishedEvent);
-        }
+    bar.timer.tick(time.delta());
+
+    let percent = bar.timer.fraction() * 100.0;
+    let mut node = style_query.into_inner();
+    node.width = Val::Percent(percent);
+
+    if bar.timer.just_finished() {
+        node.width = Val::ZERO;
+        commands.trigger(QueueTimerFinishedEvent);
     }
 }
