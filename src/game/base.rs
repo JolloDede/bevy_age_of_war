@@ -7,7 +7,7 @@ use crate::{
     consts::*,
     event::BaseAdvanceAgeEvent,
     game::{
-        HitBoxSize,
+        GameMarker, HitBoxSize,
         health_bar::{Health, health_bar_node},
         unit::new_unit_comp,
     },
@@ -44,6 +44,7 @@ pub fn spawn_bases(mut commands: Commands, asset_server: Res<AssetServer>) {
             Transform::from_xyz(player_base_x, base_y, 1.0),
             Base::new(),
             HitBoxSize::new_base(),
+            GameMarker,
         ))
         .with_children(|parent| {
             health_bar_node(parent, Health(UNIT_BASE_HEALTH), true);

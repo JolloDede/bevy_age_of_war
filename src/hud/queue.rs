@@ -92,7 +92,7 @@ pub fn queue_system(
     }
 }
 
-pub fn unit_queue_observer(
+pub fn unit_queue_handler(
     unit: On<UnitQueueEvent>,
     mut queue: ResMut<EntityQueue>,
     mut progress_query: Query<&mut QueueTimer>,

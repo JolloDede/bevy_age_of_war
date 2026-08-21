@@ -7,6 +7,7 @@ use crate::{
     event::{BaseAdvanceAgeEvent, QueueTimerFinishedEvent, UnitSpawnEvent},
     player::{Experience, Money},
     resource_paths,
+    state::GameState,
 };
 
 mod menu;
@@ -16,35 +17,50 @@ use queue::*;
 mod progressbar;
 use progressbar::*;
 
-pub struct HudPlugin;
+pub struct HudPlugin<S: States> {
+    pub state: S,
+}
 
-impl Plugin for HudPlugin {
+impl<S: States> HudPlugin<S> {
+    pub fn new(s: S) -> Self {
+        Self { state: s }
+    }
+}
+
+#[derive(Component)]
+pub struct HudMarker;
+
+impl<S: States> Plugin for HudPlugin<S> {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_camera);
+        app.add_systems(OnEnter(GameState::InGame), setup_hud);
+        app.add_systems(OnExit(GameState::InGame), despawn_hud);
 
-        app.add_systems(Startup, setup_hud);
-        app.add_systems(Update, collectable_system);
-
-        app.add_systems(Startup, setup_buttons);
         app.add_systems(
             Update,
-            menu_navigation_button_system.before(frame_button_system),
+            collectable_system.run_if(in_state(self.state.clone())),
         );
-        app.add_systems(Update, main_button_system);
-        app.add_systems(Update, unit_button_system);
-        app.add_systems(Update, turret_button_system);
-        app.add_systems(Update, frame_button_system);
+
+        app.add_systems(OnEnter(GameState::InGame), setup_buttons);
+        app.add_systems(
+            Update,
+            (
+                menu_navigation_button_system.before(frame_button_system),
+                main_button_system,
+                unit_button_system,
+                turret_button_system,
+                frame_button_system,
+            )
+                .run_if(in_state(self.state.clone())),
+        );
         app.add_observer(advance_age_observer);
 
-        {
-            app.add_systems(Startup, setup_unit_training);
-            app.add_systems(Update, queue_system);
-            app.add_observer(unit_queue_observer);
-
-            app.add_systems(Update, progressbar_system);
-        }
-
-        app.add_observer(timer_finished);
+        app.add_systems(OnEnter(GameState::InGame), setup_unit_training);
+        app.add_systems(
+            Update,
+            (queue_system, progressbar_system).run_if(in_state(self.state.clone())),
+        );
+        app.add_observer(unit_queue_handler);
+        app.add_observer(progressbar_finished);
 
         app.insert_resource(EntityQueue::default());
         app.insert_resource(BaseAge::default());
@@ -53,22 +69,7 @@ impl Plugin for HudPlugin {
     }
 }
 
-#[derive(Component)]
-struct HudCamera;
-
-fn spawn_camera(mut commands: Commands) {
-    commands.spawn((
-        Camera2d::default(),
-        Camera {
-            order: 1,
-            ..default()
-        },
-        RenderLayers::layer(HUD_LAYER),
-        HudCamera,
-    ));
-}
-
-fn timer_finished(
+fn progressbar_finished(
     _timer: On<QueueTimerFinishedEvent>,
     mut commands: Commands,
     mut queue: ResMut<EntityQueue>,
@@ -139,6 +140,7 @@ fn setup_unit_training(mut commands: Commands) {
                 ..default()
             },
             ZIndex(3),
+            HudMarker,
         ))
         .id();
 
@@ -219,4 +221,10 @@ pub enum MenuNavigationButton {
 pub enum MenuActionButton {
     UpgradeBase,
     AdvanceAge,
+}
+
+pub fn despawn_hud(mut commands: Commands, hud_query: Query<Entity, With<HudMarker>>) {
+    for entity in hud_query.iter() {
+        commands.entity(entity).despawn();
+    }
 }

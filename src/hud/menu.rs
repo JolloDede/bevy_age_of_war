@@ -9,7 +9,7 @@ use crate::{
     game_turret::TurretType,
     game_unit::{GameUnit, UnitType},
     hud::{
-        BaseAge, MenuActionButton, MenuNavigationButton,
+        BaseAge, HudMarker, MenuActionButton, MenuNavigationButton,
         menu::{
             component::{arrow_node, place_holder},
             main_buttons::{action_buttons, navigation_buttons},
@@ -67,6 +67,7 @@ pub fn setup_buttons(
             },
             RenderLayers::layer(HUD_LAYER),
             ZIndex(2),
+            HudMarker,
         ))
         .id();
 
@@ -300,6 +301,7 @@ pub fn setup_hud(
             ..default()
         },
         ZIndex(1),
+        HudMarker,
     ));
 
     let container = commands

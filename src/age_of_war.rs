@@ -8,8 +8,8 @@ impl PluginGroup for AgeOfWarPlugins {
     fn build(self) -> PluginGroupBuilder {
         PluginGroupBuilder::start::<Self>()
             .add(StartScreenPlugin::new(GameState::StartScreen))
-            .add(GamePlugin)
-            .add(HudPlugin)
+            .add(GamePlugin::new(GameState::InGame))
+            .add(HudPlugin::new(GameState::InGame))
     }
 }
 

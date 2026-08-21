@@ -1,24 +1,29 @@
 use bevy::prelude::*;
 
-use crate::state::GameState;
+use crate::{hud::HudMarker, state::GameState};
 
 pub struct StartScreenPlugin<S: States> {
-    pub state: S,
+    _state: S,
 }
 
 impl<S: States> StartScreenPlugin<S> {
     pub fn new(s: S) -> Self {
-        Self { state: s }
+        Self { _state: s }
     }
 }
 
 impl<S: States> Plugin for StartScreenPlugin<S> {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_buttons.run_if(in_state(self.state.clone())));
+        app.add_systems(OnEnter(GameState::StartScreen), setup_buttons);
+        app.add_systems(Update, button_system);
+        app.add_systems(OnExit(GameState::StartScreen), cleanup_menu);
 
         app.init_state::<GameState>();
     }
 }
+
+#[derive(Component)]
+pub struct StartScreenMarker;
 
 #[derive(Component)]
 pub struct StartButton;
@@ -34,6 +39,7 @@ fn setup_buttons(mut commands: Commands) {
                 ..default()
             },
             BackgroundColor::from(Color::linear_rgb(0., 0., 1.)),
+            StartScreenMarker,
         ))
         .id();
 
@@ -78,4 +84,26 @@ fn setup_buttons(mut commands: Commands) {
 
     commands.entity(center).add_child(button_container);
     commands.entity(button_container).add_child(start);
+}
+
+pub fn cleanup_menu(
+    mut commands: Commands,
+    startscreen_query: Single<Entity, With<StartScreenMarker>>,
+) {
+    commands.entity(startscreen_query.entity()).despawn();
+}
+
+pub fn button_system(
+    action_query: Query<&Interaction, (Changed<Interaction>, With<StartButton>)>,
+    mut game_state: ResMut<NextState<GameState>>,
+) {
+    for interaction in action_query.iter() {
+        match interaction {
+            Interaction::Pressed => {
+                game_state.set(GameState::InGame);
+            }
+            Interaction::Hovered => {}
+            Interaction::None => {}
+        }
+    }
 }
