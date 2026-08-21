@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{process::id, sync::Arc};
 
 use bevy::{camera::visibility::RenderLayers, prelude::*};
 
@@ -17,6 +17,7 @@ use crate::{
             unit_buttons::unit_button_spawner,
         },
     },
+    player::{Experience, Money},
 };
 
 mod component;
@@ -280,7 +281,18 @@ pub fn turret_button_system(
     }
 }
 
-pub fn setup_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
+#[derive(Component)]
+pub struct MoneyComp;
+
+#[derive(Component)]
+pub struct ExperienceComp;
+
+pub fn setup_hud(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    money: Res<Money>,
+    experience: Res<Experience>,
+) {
     commands.spawn((
         ImageNode::from(asset_server.load("hud_banners.png")),
         Node {
@@ -289,4 +301,71 @@ pub fn setup_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
         },
         ZIndex(1),
     ));
+
+    let container = commands
+        .spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                top: percent(6),
+                left: percent(4),
+                flex_direction: FlexDirection::Column,
+                ..default()
+            },
+            ZIndex(2),
+        ))
+        .id();
+
+    let gold = commands
+        .spawn((
+            Node {
+                flex_direction: FlexDirection::Row,
+                column_gap: px(10),
+                ..default()
+            },
+            children![
+                (ImageNode::from(asset_server.load("menu/coin.png"))),
+                (
+                    Text::new(money.0.to_string()),
+                    TextColor::from(Color::linear_rgb(1., 1., 0.)),
+                    MoneyComp,
+                )
+            ],
+        ))
+        .id();
+
+    let experience = commands
+        .spawn((
+            Node {
+                flex_direction: FlexDirection::Row,
+                column_gap: px(10),
+                ..default()
+            },
+            children![
+                (Text::new("Exp:"), TextColor::from(Color::BLACK)),
+                (
+                    Text::new(experience.0.to_string()),
+                    TextColor::from(Color::linear_rgb(1., 0., 0.)),
+                    ExperienceComp,
+                )
+            ],
+        ))
+        .id();
+
+    commands.entity(container).add_child(gold);
+    commands.entity(container).add_child(experience);
+}
+
+pub fn collectable_system(
+    money: Res<Money>,
+    experience: Res<Experience>,
+    mut text_query: ParamSet<(
+        Single<&mut Text, With<MoneyComp>>,
+        Single<&mut Text, With<ExperienceComp>>,
+    )>,
+) {
+    let mut money_text = text_query.p0().into_inner();
+    money_text.0 = money.0.to_string();
+
+    let mut experience_text = text_query.p1().into_inner();
+    experience_text.0 = experience.0.to_string();
 }

@@ -137,7 +137,7 @@ pub fn new_unit_comp(
         LEVEL_START + base_size.x
     };
     let mut sprite =
-        Sprite::from_image(asset_server.load(resource_paths::load_units(unit.level, unit.r#type)));
+        Sprite::from_image(asset_server.load(resource_paths::load_units(unit.age, unit.r#type)));
     if is_enemy {
         sprite.flip_x = true;
     }
@@ -147,7 +147,7 @@ pub fn new_unit_comp(
         Transform::from_xyz(x_pos, GROUND_Y, 1.0).with_scale(Vec3::splat(1.5)),
         Intersects::default(),
         AttackRange::from(unit.r#type),
-        AttackDamange::new(unit.level, unit.r#type),
+        AttackDamange::new(unit.age, unit.r#type),
         AttackCooldown(Timer::from_seconds(1., TimerMode::Once)),
         UnitComp(unit.clone()),
         hitbox,

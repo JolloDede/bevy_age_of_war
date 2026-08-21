@@ -14,6 +14,7 @@ use crate::{
         unit::UnitComp,
     },
     game_unit::UnitType,
+    player::{Experience, GameFinishedEvent, Money},
 };
 
 #[derive(Component, Deref)]
@@ -30,8 +31,6 @@ impl From<UnitType> for AttackRange {
             UnitType::Tank => 80.,
             UnitType::Super => 3.,
         };
-
-        // range *= HitBoxSize::from(value).x * 1.5;
 
         Self(range)
     }
@@ -88,12 +87,14 @@ pub fn combat_system(
         &mut AttackCooldown,
         Entity,
     )>,
-    attacked_unit: Query<(Entity, &Transform, &HitBoxSize, &Sprite), With<UnitComp>>,
+    attacked_unit: Query<(Entity, &Transform, &HitBoxSize, &Sprite, &UnitComp)>,
     attacked_base: Query<(Entity, &Transform, &HitBoxSize, &Sprite), With<Base>>,
     enemy_query: Query<&Enemy>,
     health_parent_query: Query<&Children>,
     mut health_query: Query<&mut Health>,
     images: Res<Assets<Image>>,
+    mut money: ResMut<Money>,
+    mut experience: ResMut<Experience>,
 ) {
     for (attacker_trans, attacker_range, attacker_damage, mut cooldown, entity) in
         attacker_query.iter_mut()
@@ -108,8 +109,8 @@ pub fn combat_system(
             BoundingCircle::new(attacker_trans.translation.truncate(), attacker_range.0);
         let attacker_is_enemy = enemy_query.get(entity).is_ok();
 
-        let mut nearest_enemy: Option<(Entity, f32)> = None;
-        for (attacked_entity, attacked_trans, hitbox, sprite) in attacked_unit.iter() {
+        let mut nearest_enemy: Option<(Entity, f32, Option<(UnitType, Age)>)> = None;
+        for (attacked_entity, attacked_trans, hitbox, sprite, unit) in attacked_unit.iter() {
             let is_enemy = enemy_query.get(attacked_entity).is_ok();
             if attacker_is_enemy == is_enemy {
                 continue;
@@ -130,12 +131,14 @@ pub fn combat_system(
                 } else {
                     attacker_radius.center.x + hitbox.x.div(2.)
                 };
-                if let Some((_, nearest_distance)) = nearest_enemy {
+                if let Some((_, nearest_distance, _)) = nearest_enemy {
                     if distance < nearest_distance {
-                        nearest_enemy = Some((attacked_entity, distance));
+                        nearest_enemy =
+                            Some((attacked_entity, distance, Some((unit.r#type, unit.age))));
                     }
                 } else {
-                    nearest_enemy = Some((attacked_entity, distance));
+                    nearest_enemy =
+                        Some((attacked_entity, distance, Some((unit.r#type, unit.age))));
                 }
             }
         }
@@ -163,19 +166,28 @@ pub fn combat_system(
                     } else {
                         attacker_radius.center.x + hitbox.x.div(2.)
                     };
-                    nearest_enemy = Some((base_entity, distance));
+                    nearest_enemy = Some((base_entity, distance, None));
                 }
             }
         }
 
-        if let Some((target_entity, _)) = nearest_enemy {
+        if let Some((target_entity, _, is_unit)) = nearest_enemy {
             let children = health_parent_query.get(target_entity).unwrap();
             for &child in children {
                 if let Ok(mut health) = health_query.get_mut(child) {
                     health.0 -= attacker_damage.0;
                     if health.0 <= 0 {
-                        info!("Killed a unit");
-                        commands.entity(target_entity).despawn();
+                        if let Some((u_type, age)) = is_unit {
+                            info!("Killed a unit");
+                            if !attacker_is_enemy {
+                                money.killed_unit(u_type, age);
+                                experience.killed_unit(u_type, age);
+                            }
+                            commands.entity(target_entity).despawn();
+                        } else {
+                            info!("Killed a base");
+                            commands.trigger(GameFinishedEvent(target_entity));
+                        }
                     } else {
                         cooldown.0.reset();
                         debug!("Attacked! remaining health: {}", health.0);

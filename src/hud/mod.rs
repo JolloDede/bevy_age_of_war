@@ -5,6 +5,7 @@ use crate::{
     age_of_war::Age,
     consts::*,
     event::{BaseAdvanceAgeEvent, QueueTimerFinishedEvent, UnitSpawnEvent},
+    player::{Experience, Money},
     resource_paths,
 };
 
@@ -22,6 +23,8 @@ impl Plugin for HudPlugin {
         app.add_systems(Startup, spawn_camera);
 
         app.add_systems(Startup, setup_hud);
+        app.add_systems(Update, collectable_system);
+
         app.add_systems(Startup, setup_buttons);
         app.add_systems(
             Update,
@@ -45,6 +48,8 @@ impl Plugin for HudPlugin {
 
         app.insert_resource(EntityQueue::default());
         app.insert_resource(BaseAge::default());
+        app.insert_resource(Money(175));
+        app.insert_resource(Experience(0));
     }
 }
 
