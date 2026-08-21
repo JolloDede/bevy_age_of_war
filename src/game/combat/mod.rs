@@ -110,7 +110,8 @@ pub fn combat_system(
         let attacker_is_enemy = enemy_query.get(entity).is_ok();
 
         let mut nearest_enemy: Option<(Entity, f32, Option<(UnitType, Age)>)> = None;
-        for (attacked_entity, attacked_trans, hitbox, sprite, unit) in attacked_unit.iter() {
+        for (attacked_entity, attacked_trans, attacked_hithox, sprite, unit) in attacked_unit.iter()
+        {
             let is_enemy = enemy_query.get(attacked_entity).is_ok();
             if attacker_is_enemy == is_enemy {
                 continue;
@@ -124,12 +125,12 @@ pub fn combat_system(
                 attacked_trans.translation.x,
                 attacked_trans.translation.y + (image.height() as f32 / 4.),
             );
-            let attacked_hitbox = Aabb2d::new(pos, hitbox.div(2.));
+            let attacked_hitbox = Aabb2d::new(pos, attacked_hithox.div(2.));
             if attacker_radius.intersects(&attacked_hitbox) {
                 let distance = if is_enemy {
-                    attacker_radius.center.x - hitbox.x.div(2.)
+                    attacked_hithox.x.div(2.)
                 } else {
-                    attacker_radius.center.x + hitbox.x.div(2.)
+                    attacked_hithox.x.div(2.)
                 };
                 if let Some((_, nearest_distance, _)) = nearest_enemy {
                     if distance < nearest_distance {
