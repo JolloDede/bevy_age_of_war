@@ -252,13 +252,17 @@ pub fn unit_button_system(
     mut commands: Commands,
     action_query: Query<(&Interaction, &UnitButtons), (Changed<Interaction>, With<Button>)>,
     base_age: Res<BaseAge>,
+    mut money: ResMut<Money>,
 ) {
     for (interaction, unit_button) in action_query.iter() {
         if *interaction == Interaction::Pressed {
-            commands.trigger(UnitQueueEvent(Arc::new(GameUnit::new(
-                base_age.0,
-                unit_button.0,
-            ))));
+            let unit_cost = money.unit_price(unit_button.0, base_age.0);
+            if money.subtract_money(unit_cost) {
+                commands.trigger(UnitQueueEvent(Arc::new(GameUnit::new(
+                    base_age.0,
+                    unit_button.0,
+                ))));
+            }
         }
     }
 }

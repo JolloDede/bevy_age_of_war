@@ -30,6 +30,35 @@ impl Money {
 
         self.0 += amount;
     }
+
+    pub fn unit_price(&self, unit: UnitType, age: Age) -> u32 {
+        let mut amount = match unit {
+            UnitType::Meele => 15, // 50 200 1500
+            UnitType::Ranged => 25,
+            UnitType::Tank => 100,
+            UnitType::Super => 12,
+        };
+
+        amount *= match age {
+            Age::StoneAge => 1,
+            Age::Medival => 4,
+            Age::Renaissance => 10,
+            Age::Modern => 100,
+            Age::Future => 400,
+        };
+
+        return amount;
+    }
+
+    pub fn subtract_money(&mut self, amount: u32) -> bool {
+        let mut subtracted = false;
+        if amount <= self.0 {
+            self.0 -= amount;
+            subtracted = true;
+        }
+
+        return subtracted;
+    }
 }
 
 impl Experience {
