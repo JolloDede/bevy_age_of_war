@@ -9,7 +9,7 @@ use crate::{
     game_turret::TurretType,
     game_unit::{GameUnit, UnitType},
     hud::{
-        BaseAge, HudMarker, MenuActionButton, MenuNavigationButton,
+        BaseAge, HelpText, HudMarker, MenuActionButton, MenuNavigationButton,
         menu::{
             component::{arrow_node, place_holder},
             main_buttons::{action_buttons, navigation_buttons},
@@ -17,6 +17,7 @@ use crate::{
             unit_buttons::unit_button_spawner,
         },
     },
+    name::{turret_name, unit_name},
     player::{Experience, Money},
 };
 
@@ -83,6 +84,12 @@ pub fn setup_buttons(
         },))
         .id();
 
+    let button_node = Node {
+        flex_direction: FlexDirection::Row,
+        column_gap: px(4),
+        ..default()
+    };
+
     commands
         .entity(menu_container)
         .add_children(&[menu_text, button_container]);
@@ -92,7 +99,9 @@ pub fn setup_buttons(
     main_buttons.append(&mut navigation_buttons(&mut commands, &asset_server));
     main_buttons.append(&mut action_buttons(&mut commands, &asset_server));
 
-    let main = commands.spawn((Node::DEFAULT, ButtonGroup::Main)).id();
+    let main = commands
+        .spawn((button_node.clone(), ButtonGroup::Main))
+        .id();
     commands.entity(main).add_children(&main_buttons);
     commands.entity(button_container).add_child(main);
 
@@ -110,7 +119,7 @@ pub fn setup_buttons(
         .spawn((
             Node {
                 display: Display::None,
-                ..default()
+                ..button_node.clone()
             },
             ButtonGroup::Units,
         ))
@@ -133,7 +142,7 @@ pub fn setup_buttons(
         .spawn((
             Node {
                 display: Display::None,
-                ..default()
+                ..button_node.clone()
             },
             ButtonGroup::Turrets,
         ))
@@ -253,25 +262,44 @@ pub fn unit_button_system(
     action_query: Query<(&Interaction, &UnitButtons), (Changed<Interaction>, With<Button>)>,
     base_age: Res<BaseAge>,
     mut money: ResMut<Money>,
+    help_text_query: Single<(&mut Text, &mut TextColor), With<HelpText>>,
 ) {
+    let (mut text, mut color) = help_text_query.into_inner();
+
     for (interaction, unit_button) in action_query.iter() {
-        if *interaction == Interaction::Pressed {
-            let unit_cost = money.unit_price(unit_button.0, base_age.0);
-            if money.subtract_money(unit_cost) {
-                commands.trigger(UnitQueueEvent(Arc::new(GameUnit::new(
-                    base_age.0,
-                    unit_button.0,
-                ))));
+        let unit_cost = money.unit_price(unit_button.0, base_age.0);
+
+        match *interaction {
+            Interaction::Pressed => {
+                if money.subtract_money(unit_cost) {
+                    commands.trigger(UnitQueueEvent(Arc::new(GameUnit::new(
+                        base_age.0,
+                        unit_button.0,
+                    ))));
+                }
+            }
+            Interaction::Hovered => {
+                text.0 = format!("{}$ - {}", unit_cost, unit_name(unit_button.0, base_age.0));
+                color.0 = Color::linear_rgb(1., 1., 0.);
+            }
+            Interaction::None => {
+                text.0.clear();
             }
         }
     }
 }
+
 pub fn turret_button_system(
     action_query: Query<(&Interaction, &TurretButtons), (Changed<Interaction>, With<Button>)>,
+    base_age: Res<BaseAge>,
+    money: Res<Money>,
+    help_text_query: Single<(&mut Text, &mut TextColor), With<HelpText>>,
 ) {
+    let (mut text, mut color) = help_text_query.into_inner();
     for (interaction, action) in action_query.iter() {
-        if *interaction == Interaction::Pressed {
-            match action.0 {
+        let turret_cost = money.tower_price(action.0, base_age.0);
+        match *interaction {
+            Interaction::Pressed => match action.0 {
                 TurretType::Small => {
                     println!("Small Turret")
                 }
@@ -281,6 +309,13 @@ pub fn turret_button_system(
                 TurretType::Large => {
                     println!("Big Turret")
                 }
+            },
+            Interaction::Hovered => {
+                text.0 = format!("{}$ - {}", turret_cost, turret_name(action.0, base_age.0));
+                color.0 = Color::linear_rgb(1., 1., 0.);
+            }
+            Interaction::None => {
+                text.0.clear();
             }
         }
     }

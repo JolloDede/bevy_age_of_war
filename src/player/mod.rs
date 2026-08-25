@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{age_of_war::Age, game_unit::UnitType};
+use crate::{age_of_war::Age, game_turret::TurretType, game_unit::UnitType};
 
 #[derive(Event)]
 pub struct GameFinishedEvent(pub Entity);
@@ -32,22 +32,32 @@ impl Money {
     }
 
     pub fn unit_price(&self, unit: UnitType, age: Age) -> u32 {
-        let mut amount = match unit {
-            UnitType::Meele => 15, // 50 200 1500
-            UnitType::Ranged => 25,
-            UnitType::Tank => 100,
-            UnitType::Super => 12,
-        };
+        match (unit, age) {
+            (UnitType::Meele, Age::StoneAge) => 15,
+            (UnitType::Ranged, Age::StoneAge) => 25,
+            (UnitType::Tank, Age::StoneAge) => 100,
+            (UnitType::Super, Age::StoneAge) => todo!(),
 
-        amount *= match age {
-            Age::StoneAge => 1,
-            Age::Medival => 4,
-            Age::Renaissance => 10,
-            Age::Modern => 100,
-            Age::Future => 400,
-        };
+            (UnitType::Meele, Age::Medival) => 50,
+            (UnitType::Ranged, Age::Medival) => 75,
+            (UnitType::Tank, Age::Medival) => 500,
+            (UnitType::Super, Age::Medival) => todo!(),
 
-        return amount;
+            (UnitType::Meele, Age::Renaissance) => 200,
+            (UnitType::Ranged, Age::Renaissance) => 400,
+            (UnitType::Tank, Age::Renaissance) => 1000,
+            (UnitType::Super, Age::Renaissance) => todo!(),
+
+            (UnitType::Meele, Age::Modern) => 1500,
+            (UnitType::Ranged, Age::Modern) => 2000,
+            (UnitType::Tank, Age::Modern) => 7000,
+            (UnitType::Super, Age::Modern) => todo!(),
+
+            (UnitType::Meele, Age::Future) => 5000,
+            (UnitType::Ranged, Age::Future) => 6000,
+            (UnitType::Tank, Age::Future) => 20000,
+            (UnitType::Super, Age::Future) => todo!(),
+        }
     }
 
     pub fn subtract_money(&mut self, amount: u32) -> bool {
@@ -58,6 +68,30 @@ impl Money {
         }
 
         return subtracted;
+    }
+
+    pub fn tower_price(&self, turret: TurretType, age: Age) -> u32 {
+        match (turret, age) {
+            (TurretType::Small, Age::StoneAge) => 100,
+            (TurretType::Medium, Age::StoneAge) => 200,
+            (TurretType::Large, Age::StoneAge) => 500,
+
+            (TurretType::Small, Age::Medival) => 500,
+            (TurretType::Medium, Age::Medival) => 750,
+            (TurretType::Large, Age::Medival) => 1000,
+
+            (TurretType::Small, Age::Renaissance) => 1500,
+            (TurretType::Medium, Age::Renaissance) => 3000,
+            (TurretType::Large, Age::Renaissance) => 6000,
+
+            (TurretType::Small, Age::Modern) => 7000,
+            (TurretType::Medium, Age::Modern) => 9000,
+            (TurretType::Large, Age::Modern) => 14000,
+
+            (TurretType::Small, Age::Future) => 24_000,
+            (TurretType::Medium, Age::Future) => 40_000,
+            (TurretType::Large, Age::Future) => 100_000,
+        }
     }
 }
 

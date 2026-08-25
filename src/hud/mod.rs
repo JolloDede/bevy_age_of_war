@@ -125,6 +125,9 @@ pub fn advance_age_observer(
     }
 }
 
+#[derive(Component)]
+pub struct HelpText;
+
 fn setup_unit_training(mut commands: Commands) {
     let container = commands
         .spawn((
@@ -134,14 +137,23 @@ fn setup_unit_training(mut commands: Commands) {
                 position_type: PositionType::Absolute,
                 left: percent(20),
                 top: percent(2),
-                flex_direction: FlexDirection::Row,
-                column_gap: px(4),
-                align_items: AlignItems::Center,
+                flex_direction: FlexDirection::Column,
+                row_gap: px(4),
                 ..default()
             },
+            BackgroundColor::from(Color::linear_rgb(1., 0., 0.)),
             ZIndex(3),
             HudMarker,
         ))
+        .id();
+
+    let training_container = commands
+        .spawn(Node {
+            flex_direction: FlexDirection::Row,
+            column_gap: px(4),
+            align_items: AlignItems::Center,
+            ..default()
+        })
         .id();
 
     let progress = commands
@@ -205,8 +217,14 @@ fn setup_unit_training(mut commands: Commands) {
         })
         .id();
 
-    commands.entity(container).add_child(progress);
-    commands.entity(container).add_child(queue);
+    let help_text = commands
+        .spawn((Text::from("Help text"), TextColor::BLACK, HelpText))
+        .id();
+
+    commands.entity(container).add_child(training_container);
+    commands.entity(container).add_child(help_text);
+    commands.entity(training_container).add_child(progress);
+    commands.entity(training_container).add_child(queue);
 }
 
 #[derive(Component, EnumIter, Clone, Copy, PartialEq)]

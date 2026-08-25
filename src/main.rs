@@ -12,6 +12,7 @@ mod game;
 mod game_turret;
 mod game_unit;
 mod hud;
+mod name;
 mod player;
 mod resource_paths;
 mod start_screen;

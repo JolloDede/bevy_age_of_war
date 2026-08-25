@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{hud::HudMarker, state::GameState};
+use crate::state::GameState;
 
 pub struct StartScreenPlugin<S: States> {
     _state: S,
