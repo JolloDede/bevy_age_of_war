@@ -141,7 +141,6 @@ fn setup_unit_training(mut commands: Commands) {
                 row_gap: px(4),
                 ..default()
             },
-            BackgroundColor::from(Color::linear_rgb(1., 0., 0.)),
             ZIndex(3),
             HudMarker,
         ))
