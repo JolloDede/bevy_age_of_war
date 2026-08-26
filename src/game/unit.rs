@@ -129,6 +129,7 @@ pub fn new_unit_comp(
     asset_server: Res<AssetServer>,
 ) {
     let hitbox = HitBoxSize::from(unit.r#type);
+    let unit_size = hitbox.0.clone();
     let base_size = HitBoxSize::new_base();
 
     let x_pos = if is_enemy {
@@ -157,6 +158,6 @@ pub fn new_unit_comp(
     }
 
     unit_bundle.with_children(|parent| {
-        health_bar_node(parent, Health::from(unit.r#type), false);
+        health_bar_node(parent, Health::from(unit.r#type), Some(unit_size));
     });
 }

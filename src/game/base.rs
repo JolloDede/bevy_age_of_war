@@ -33,6 +33,9 @@ impl Base {
 #[derive(Component)]
 pub struct EnemyBaseQueueTimer(Timer);
 
+#[derive(Component)]
+pub struct BaseHealthTextMarker;
+
 pub fn spawn_bases(mut commands: Commands, asset_server: Res<AssetServer>) {
     let player_base_x = LEVEL_START + (BASE_SIZE.x * 0.5) + BASE_MARGIN;
     let enemy_base_x = LEVEL_END - (BASE_SIZE.x * 0.5) - BASE_MARGIN;
@@ -47,7 +50,17 @@ pub fn spawn_bases(mut commands: Commands, asset_server: Res<AssetServer>) {
             GameMarker,
         ))
         .with_children(|parent| {
-            health_bar_node(parent, Health(UNIT_BASE_HEALTH), true);
+            parent.spawn((
+                Text2d::new(BASE_START_HEALTH.to_string()),
+                TextColor::from(Color::srgb_u8(255, 0, 0)),
+                Transform::from_xyz(
+                    BASE_SIZE.x / 2.,
+                    BASE_SIZE.y + (BASE_HEALTH_BAR_HEIGHT / 2.),
+                    0.,
+                ),
+                BaseHealthTextMarker,
+            ));
+            health_bar_node(parent, Health(BASE_START_HEALTH), None);
         });
 
     commands
@@ -64,8 +77,33 @@ pub fn spawn_bases(mut commands: Commands, asset_server: Res<AssetServer>) {
             EnemyBaseQueueTimer(Timer::from_seconds(4., TimerMode::Repeating)),
         ))
         .with_children(|parent| {
-            health_bar_node(parent, Health(UNIT_BASE_HEALTH), true);
+            parent.spawn((
+                Text2d::new(BASE_START_HEALTH.to_string()),
+                TextColor::from(Color::srgb_u8(255, 0, 0)),
+                Transform::from_xyz(
+                    -(BASE_SIZE.x / 2.),
+                    BASE_SIZE.y + (BASE_HEALTH_BAR_HEIGHT / 2.),
+                    0.,
+                ),
+                BaseHealthTextMarker,
+            ));
+            health_bar_node(parent, Health(BASE_START_HEALTH), None);
         });
+}
+
+pub fn base_health_text(
+    mut text_query: Query<(&mut Text2d, &ChildOf), With<BaseHealthTextMarker>>,
+    base_query: Query<&Children, With<Base>>,
+    health_query: Query<&Health>,
+) {
+    for (mut text, childof) in text_query.iter_mut() {
+        let children = base_query.get(childof.parent()).unwrap();
+        for child in children {
+            if let Ok(health) = health_query.get(*child) {
+                text.0 = health.0.to_string();
+            }
+        }
+    }
 }
 
 pub fn advance_age_observer(

@@ -31,7 +31,7 @@ impl<S: States> Plugin for GamePlugin<S> {
 
         app.add_systems(
             Update,
-            (move_camera, health_system).run_if(in_state(self.state.clone())),
+            (move_camera, health_system, base_health_text).run_if(in_state(self.state.clone())),
         );
 
         app.add_systems(OnEnter(GameState::InGame), load_audio);

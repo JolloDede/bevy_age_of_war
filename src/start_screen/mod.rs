@@ -18,7 +18,8 @@ impl<S: States> Plugin for StartScreenPlugin<S> {
         app.add_systems(Update, button_system);
         app.add_systems(OnExit(GameState::StartScreen), cleanup_menu);
 
-        app.init_state::<GameState>();
+        // app.init_state::<GameState>();
+        app.insert_state(GameState::InGame);
     }
 }
 
