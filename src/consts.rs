@@ -17,11 +17,13 @@ pub const LEVEL_SIZE: Vec2 = Vec2::new(1520., 504.);
 pub const LEVEL_START: f32 = -(LEVEL_SIZE.x * 0.5);
 pub const LEVEL_END: f32 = LEVEL_SIZE.x * 0.5;
 
-pub const BASE_MARGIN: f32 = -6.;
+pub const BASE_MARGIN: f32 = 0.;
 pub const BASE_COLOR: Color = Color::linear_rgb(0.4, 0.4, 0.4);
 pub const BASE_SIZE: Vec2 = Vec2::new(80.0, 169.0);
 pub const BASE_HEALTH_BAR_HEIGHT: f32 = 160.;
 pub const BASE_START_HEALTH: i32 = 500;
+pub const BASE_EXPAND_SIZE: Vec2 = Vec2::new(51., 50.);
+pub const BASE_MAX_TOWER_COUNT: usize = 3;
 
 pub const GROUND_Y: f32 = -(LEVEL_SIZE.y * 0.5) + (GROUND_HEIGHT * 0.8);
 pub const GROUND_HEIGHT: f32 = 50.0;

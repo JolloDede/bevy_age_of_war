@@ -5,8 +5,8 @@ use bevy::{camera::visibility::RenderLayers, prelude::*};
 use crate::{
     age_of_war::Age,
     consts::{HUD_LAYER, MENU_TEXT, MENU_TEXT_COLOR},
-    event::{BaseAdvanceAgeEvent, UnitQueueEvent},
-    game_turret::TurretType,
+    event::{BaseAdvanceAgeEvent, UnitQueueEvent, UpgradeBaseEvent},
+    game_turret::{BaseTower, TurretType},
     game_unit::{GameUnit, UnitType},
     hud::{
         BaseAge, HelpText, HudMarker, MenuActionButton, MenuNavigationButton,
@@ -235,12 +235,16 @@ pub fn main_button_system(
     mut commands: Commands,
     action_query: Query<(&Interaction, &MenuActionButton), (Changed<Interaction>, With<Button>)>,
     mut age: ResMut<BaseAge>,
+    help_text_query: Single<(&mut Text, &mut TextColor), With<HelpText>>,
+    money: Res<Money>,
+    turret_query: Query<&BaseTower>,
 ) {
+    let (mut text, mut color) = help_text_query.into_inner();
     for (interaction, action) in action_query.iter() {
-        if *interaction == Interaction::Pressed {
-            match action {
+        match *interaction {
+            Interaction::Pressed => match action {
                 MenuActionButton::UpgradeBase => {
-                    println!("Upgrade base")
+                    commands.trigger(UpgradeBaseEvent);
                 }
                 MenuActionButton::AdvanceAge => {
                     age.0 = match age.0 {
@@ -248,10 +252,26 @@ pub fn main_button_system(
                         Age::Medival => Age::Renaissance,
                         Age::Renaissance => Age::Modern,
                         Age::Modern => Age::Future,
-                        Age::Future => panic!("Already reached the last age"),
+                        Age::Future => {
+                            info!("Already reached the last age");
+                            Age::Future
+                        }
                     };
                     commands.trigger(BaseAdvanceAgeEvent);
                 }
+            },
+            Interaction::Hovered => match action {
+                MenuActionButton::UpgradeBase => {
+                    let amount = money.tower_upgrade(turret_query.count());
+                    text.0 = format!("{}$ - Add a turret spot", amount);
+                    color.0 = MENU_TEXT_COLOR;
+                }
+                MenuActionButton::AdvanceAge => {
+                    text.0 = "Cant advance anymore".to_string();
+                }
+            },
+            Interaction::None => {
+                text.0.clear();
             }
         }
     }
@@ -294,22 +314,27 @@ pub fn turret_button_system(
     base_age: Res<BaseAge>,
     money: Res<Money>,
     help_text_query: Single<(&mut Text, &mut TextColor), With<HelpText>>,
+    mut commands: Commands,
 ) {
     let (mut text, mut color) = help_text_query.into_inner();
     for (interaction, action) in action_query.iter() {
         let turret_cost = money.tower_price(action.0, base_age.0);
         match *interaction {
-            Interaction::Pressed => match action.0 {
-                TurretType::Small => {
-                    println!("Small Turret")
-                }
-                TurretType::Medium => {
-                    println!("Medium Turret")
-                }
-                TurretType::Large => {
-                    println!("Big Turret")
-                }
-            },
+            Interaction::Pressed => {
+                // mark the base and all the places where you can place the turret
+
+                match action.0 {
+                    TurretType::Small => {
+                        println!("Small Turret")
+                    }
+                    TurretType::Medium => {
+                        println!("Medium Turret")
+                    }
+                    TurretType::Large => {
+                        println!("Big Turret")
+                    }
+                };
+            }
             Interaction::Hovered => {
                 text.0 = format!("{}$ - {}", turret_cost, turret_name(action.0, base_age.0));
                 color.0 = Color::linear_rgb(1., 1., 0.);

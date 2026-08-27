@@ -1,4 +1,4 @@
-// use bevy::prelude::*;
+use bevy::prelude::*;
 
 use strum::EnumIter;
 
@@ -8,3 +8,6 @@ pub enum TurretType {
     Medium,
     Large,
 }
+
+#[derive(Component)]
+pub struct BaseTower(pub usize);

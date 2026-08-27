@@ -135,7 +135,7 @@ pub fn new_unit_comp(
     let x_pos = if is_enemy {
         LEVEL_END - base_size.x
     } else {
-        LEVEL_START + (base_size.x * 0.7) + hitbox.x / 2.
+        LEVEL_START + (base_size.x * 0.8) + hitbox.x / 2.
     };
     let mut sprite =
         Sprite::from_image(asset_server.load(resource_paths::load_units(unit.age, unit.r#type)));

@@ -1,3 +1,5 @@
+use bevy::log::debug;
+
 use crate::{
     age_of_war::Age,
     game_turret::TurretType,
@@ -113,5 +115,28 @@ pub fn load_action_icons(button: MenuActionButton) -> String {
 
     res.push_str(".png");
 
+    return res;
+}
+
+pub fn load_tower_part(index: usize, age: Age) -> String {
+    let mut res = String::from("base/stage");
+
+    res.push(match index {
+        0 => '1',
+        1 => '2',
+        _ => '3',
+    });
+    res.push('.');
+    res.push(match age {
+        Age::StoneAge => '1',
+        Age::Medival => '2',
+        Age::Renaissance => '3',
+        Age::Modern => '4',
+        Age::Future => '5',
+    });
+
+    res.push_str(".png");
+
+    debug!(res);
     return res;
 }

@@ -40,6 +40,7 @@ impl<S: States> Plugin for GamePlugin<S> {
 
         app.add_systems(OnEnter(GameState::InGame), spawn_bases);
         app.add_observer(advance_age_observer);
+        app.add_observer(upgrade_base_observer);
 
         app.add_systems(
             Update,

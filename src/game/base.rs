@@ -5,15 +5,17 @@ use bevy::prelude::*;
 use crate::{
     age_of_war::Age,
     consts::*,
-    event::BaseAdvanceAgeEvent,
+    event::{BaseAdvanceAgeEvent, UpgradeBaseEvent},
     game::{
         GameMarker, HitBoxSize,
         health_bar::{Health, health_bar_node},
         unit::new_unit_comp,
     },
+    game_turret::BaseTower,
     game_unit::GameUnit,
     hud::BaseAge,
-    resource_paths,
+    player::Money,
+    resource_paths::{self, load_tower_part},
 };
 
 #[derive(Component)]
@@ -37,7 +39,7 @@ pub struct EnemyBaseQueueTimer(Timer);
 pub struct BaseHealthTextMarker;
 
 pub fn spawn_bases(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let player_base_x = LEVEL_START + (BASE_SIZE.x * 0.5) + BASE_MARGIN;
+    let player_base_x = LEVEL_START + (BASE_SIZE.x * 0.8) + BASE_MARGIN;
     let enemy_base_x = LEVEL_END - (BASE_SIZE.x * 0.5) - BASE_MARGIN;
     let base_y = GROUND_Y + (BASE_SIZE.y * 0.5);
 
@@ -50,11 +52,48 @@ pub fn spawn_bases(mut commands: Commands, asset_server: Res<AssetServer>) {
             GameMarker,
         ))
         .with_children(|parent| {
+            let y_offset = -24.;
+            let sprite_size = 35.;
+            parent.spawn((
+                Sprite::from(asset_server.load("base/turret_place.png")),
+                Transform::from_xyz(BASE_SIZE.x / 3. + 4., (BASE_SIZE.y / 4.) + y_offset, 3.),
+                children![Sprite::from_color(
+                    Color::srgba_u8(255, 255, 255, 100),
+                    Vec2::new(sprite_size, sprite_size)
+                ),],
+            ));
+            for (index, asset) in [
+                "base/stage1.1.png",
+                "base/stage2.1.png",
+                "base/stage3.1.png",
+            ]
+            .iter()
+            .enumerate()
+            {
+                // parent.spawn((
+                //     Sprite::from(asset_server.load(*asset)),
+                //     Transform::from_xyz(
+                //         BASE_SIZE.x / 3. + 4.,
+                //         (BASE_SIZE.y / 2.) + (index as f32 * BASE_EXPAND_SIZE.y) + y_offset,
+                //         2.,
+                //     ),
+                //     BaseTower(index),
+                // ));
+                parent.spawn((
+                    Sprite::from(asset_server.load("base/turret_place.png")),
+                    Transform::from_xyz(
+                        BASE_SIZE.x / 3. + 4.,
+                        (BASE_SIZE.y / 2.) + (index as f32 * BASE_EXPAND_SIZE.y) + y_offset,
+                        3.,
+                    ),
+                ));
+            }
+
             parent.spawn((
                 Text2d::new(BASE_START_HEALTH.to_string()),
                 TextColor::from(Color::srgb_u8(255, 0, 0)),
                 Transform::from_xyz(
-                    BASE_SIZE.x / 2.,
+                    BASE_SIZE.x / 4.,
                     BASE_SIZE.y + (BASE_HEALTH_BAR_HEIGHT / 2.),
                     0.,
                 ),
@@ -108,13 +147,61 @@ pub fn base_health_text(
 
 pub fn advance_age_observer(
     _advance_event: On<BaseAdvanceAgeEvent>,
-    base_query: Single<&mut Sprite, (With<Base>, Without<Enemy>)>,
     asset_server: Res<AssetServer>,
     base_age: Res<BaseAge>,
+    mut sprite_query: ParamSet<(
+        Single<&mut Sprite, (With<Base>, Without<Enemy>)>,
+        Query<(&mut Sprite, &BaseTower, &mut Transform)>,
+    )>,
 ) {
-    let mut sprite = base_query.into_inner();
+    let mut sprite = sprite_query.p0().into_inner();
 
     sprite.image = asset_server.load(resource_paths::load_base(base_age.0));
+
+    for (mut sprite, base_tower, mut trans) in sprite_query.p1().iter_mut() {
+        if base_tower.0 == 0 {
+            if base_age.0 == Age::Modern {
+                trans.translation.x -= 11.;
+            }
+            if base_age.0 == Age::Future {
+                trans.translation.x += 13.;
+            }
+        }
+        sprite.image = asset_server.load(resource_paths::load_tower_part(base_tower.0, base_age.0));
+    }
+}
+
+pub fn upgrade_base_observer(
+    _upgrade_event: On<UpgradeBaseEvent>,
+    mut commands: Commands,
+    base_query: Single<Entity, (With<Base>, Without<Enemy>)>,
+    turret_query: Query<Entity, With<BaseTower>>,
+    asset_server: Res<AssetServer>,
+    base_age: Res<BaseAge>,
+    mut money: ResMut<Money>,
+) {
+    let y_offset = -24.;
+
+    let tower_stage = turret_query.count();
+    if tower_stage == BASE_MAX_TOWER_COUNT {
+        debug!("Cant build anymore towers");
+        return;
+    }
+    let amount = money.tower_upgrade(tower_stage);
+
+    if money.subtract_money(amount) {
+        let base_entity = base_query.into_inner();
+        let tower_part = (
+            Sprite::from(asset_server.load(load_tower_part(tower_stage, base_age.0))),
+            Transform::from_xyz(
+                BASE_SIZE.x / 3. + 4.,
+                (BASE_SIZE.y / 2.) + (tower_stage as f32 * BASE_EXPAND_SIZE.y) + y_offset,
+                2.,
+            ),
+            BaseTower(tower_stage),
+        );
+        commands.entity(base_entity).with_child(tower_part);
+    }
 }
 
 pub fn enemy_base_spawn_unit(

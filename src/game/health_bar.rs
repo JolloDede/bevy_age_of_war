@@ -38,10 +38,10 @@ pub fn health_bar_node(
 ) {
     let (health_bar_size, health_bar_color, health_bar_bg_color, bar_offset) = match unit_size {
         None => (
-            Vec2::new(BASE_SIZE.x / 2., BASE_HEALTH_BAR_HEIGHT),
+            Vec2::new(BASE_SIZE.x / 3., BASE_HEALTH_BAR_HEIGHT),
             BASE_HEALTH_BAR_HEALTH,
             Color::srgba_u8(0, 0, 0, 11),
-            Vec2::new(0., BASE_SIZE.y + HEALTH_BAR_MARGIN),
+            Vec2::new(-(BASE_SIZE.x / 4.), BASE_SIZE.y + HEALTH_BAR_MARGIN),
         ),
         Some(unit_size) => (
             Vec2::new(unit_size.x / 2., HEALTH_BAR_SIZE.y),

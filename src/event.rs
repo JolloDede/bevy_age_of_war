@@ -15,3 +15,6 @@ pub struct QueueTimerFinishedEvent;
 
 #[derive(Event)]
 pub struct BaseAdvanceAgeEvent;
+
+#[derive(Event)]
+pub struct UpgradeBaseEvent;

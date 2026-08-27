@@ -93,6 +93,14 @@ impl Money {
             (TurretType::Large, Age::Future) => 100_000,
         }
     }
+
+    pub fn tower_upgrade(&self, index: usize) -> u32 {
+        match index {
+            0 => 1000,
+            1 => 2000,
+            _ => 10_000,
+        }
+    }
 }
 
 impl Experience {
