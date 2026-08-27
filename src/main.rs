@@ -38,3 +38,17 @@ fn main() {
         .add_plugins(AgeOfWarPlugins)
         .run();
 }
+
+#[derive(Component)]
+pub struct Enemy;
+
+#[derive(Component)]
+pub struct Base {
+    pub age: Age,
+}
+
+impl Base {
+    pub fn new() -> Self {
+        Self { age: Age::StoneAge }
+    }
+}

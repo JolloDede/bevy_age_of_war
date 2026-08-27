@@ -6,13 +6,9 @@ use bevy::{
 };
 
 use crate::{
+    Base, Enemy,
     age_of_war::Age,
-    game::{
-        HitBoxSize,
-        base::{Base, Enemy},
-        health_bar::Health,
-        unit::UnitComp,
-    },
+    game::{HitBoxSize, health_bar::Health, unit::UnitComp},
     game_unit::UnitType,
     player::{Experience, GameFinishedEvent, Money},
 };

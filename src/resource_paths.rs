@@ -1,5 +1,3 @@
-use bevy::log::debug;
-
 use crate::{
     age_of_war::Age,
     game_turret::TurretType,
@@ -137,6 +135,5 @@ pub fn load_tower_part(index: usize, age: Age) -> String {
 
     res.push_str(".png");
 
-    debug!(res);
     return res;
 }

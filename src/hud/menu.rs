@@ -3,8 +3,9 @@ use std::sync::Arc;
 use bevy::{camera::visibility::RenderLayers, prelude::*};
 
 use crate::{
+    Base, Enemy,
     age_of_war::Age,
-    consts::{HUD_LAYER, MENU_TEXT, MENU_TEXT_COLOR},
+    consts::{BASE_SIZE, HUD_LAYER, MENU_TEXT, MENU_TEXT_COLOR, TURRET_SPOT_SIZE, TURRET_Y_OFFSET},
     event::{BaseAdvanceAgeEvent, UnitQueueEvent, UpgradeBaseEvent},
     game_turret::{BaseTower, TurretType},
     game_unit::{GameUnit, UnitType},
@@ -315,14 +316,21 @@ pub fn turret_button_system(
     money: Res<Money>,
     help_text_query: Single<(&mut Text, &mut TextColor), With<HelpText>>,
     mut commands: Commands,
+    base_query: Single<Entity, (With<Base>, Without<Enemy>)>,
+    turret_spots_query: Query<Entity, With<BaseTower>>,
+    asset_server: Res<AssetServer>,
 ) {
     let (mut text, mut color) = help_text_query.into_inner();
     for (interaction, action) in action_query.iter() {
         let turret_cost = money.tower_price(action.0, base_age.0);
         match *interaction {
             Interaction::Pressed => {
-                // mark the base and all the places where you can place the turret
-
+                mark_all_turret_places(
+                    &mut commands,
+                    &base_query,
+                    &turret_spots_query,
+                    &asset_server,
+                );
                 match action.0 {
                     TurretType::Small => {
                         println!("Small Turret")
@@ -343,6 +351,48 @@ pub fn turret_button_system(
                 text.0.clear();
             }
         }
+    }
+}
+
+#[derive(Component)]
+pub struct TurretSpotMarker;
+
+pub fn mark_all_turret_places(
+    commands: &mut Commands,
+    base_query: &Single<Entity, (With<Base>, Without<Enemy>)>,
+    turret_spots_query: &Query<Entity, With<BaseTower>>,
+    asset_server: &Res<AssetServer>,
+) {
+    let turret_spot_bundle = commands
+        .spawn((
+            Sprite::from(asset_server.load("base/turret_place.png")),
+            Transform::from_xyz(
+                BASE_SIZE.x / 3. + 4.,
+                (BASE_SIZE.y / 4.) + TURRET_Y_OFFSET,
+                3.,
+            ),
+            TurretSpotMarker,
+            children![Sprite::from_color(
+                Color::srgba_u8(255, 255, 255, 100),
+                TURRET_SPOT_SIZE,
+            )],
+        ))
+        .id();
+
+    commands
+        .entity(base_query.entity())
+        .add_child(turret_spot_bundle);
+
+    for entity in turret_spots_query.iter() {
+        let turret_spot_bundle = (
+            Sprite::from(asset_server.load("base/turret_place.png")),
+            TurretSpotMarker,
+            children![Sprite::from_color(
+                Color::srgba_u8(255, 255, 255, 100),
+                TURRET_SPOT_SIZE,
+            )],
+        );
+        commands.entity(entity).with_child(turret_spot_bundle);
     }
 }
 

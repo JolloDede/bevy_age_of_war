@@ -1,6 +1,6 @@
 use bevy::{camera::visibility::RenderLayers, prelude::*};
 
-use crate::{consts::*, game_unit::UnitType, state::GameState};
+use crate::{Base, consts::*, game_unit::UnitType, state::GameState};
 
 mod base;
 use base::*;

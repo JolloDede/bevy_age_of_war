@@ -25,6 +25,9 @@ pub const BASE_START_HEALTH: i32 = 500;
 pub const BASE_EXPAND_SIZE: Vec2 = Vec2::new(51., 50.);
 pub const BASE_MAX_TOWER_COUNT: usize = 3;
 
+pub const TURRET_Y_OFFSET: f32 = -24.;
+pub const TURRET_SPOT_SIZE: Vec2 = Vec2::new(35., 35.);
+
 pub const GROUND_Y: f32 = -(LEVEL_SIZE.y * 0.5) + (GROUND_HEIGHT * 0.8);
 pub const GROUND_HEIGHT: f32 = 50.0;
 

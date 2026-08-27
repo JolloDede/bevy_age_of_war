@@ -1,6 +1,6 @@
 use bevy::{ecs::relationship::RelatedSpawnerCommands, prelude::*, sprite::Anchor};
 
-use crate::{consts::*, game::base::Base, game_unit::UnitType};
+use crate::{Base, consts::*, game_unit::UnitType};
 
 const HEALTH_BAR_SIZE: Vec2 = Vec2::new(200., 4.);
 const HEALTH_BAR_MARGIN: f32 = 12.;
