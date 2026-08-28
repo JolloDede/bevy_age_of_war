@@ -3,10 +3,13 @@ use std::sync::Arc;
 use bevy::{camera::visibility::RenderLayers, prelude::*};
 
 use crate::{
-    Base, Enemy,
+    CursorMarker,
     age_of_war::Age,
-    consts::{BASE_SIZE, HUD_LAYER, MENU_TEXT, MENU_TEXT_COLOR, TURRET_SPOT_SIZE, TURRET_Y_OFFSET},
-    event::{BaseAdvanceAgeEvent, UnitQueueEvent, UpgradeBaseEvent},
+    consts::{HUD_LAYER, MENU_TEXT, MENU_TEXT_COLOR, TURRET_SPRITE_OFFSET},
+    event::{
+        BaseAdvanceAgeEvent, MarkTurretSpotsEvent, UnMarkTurretSpotsEvent, UnitQueueEvent,
+        UpgradeBaseEvent,
+    },
     game_turret::{BaseTower, TurretType},
     game_unit::{GameUnit, UnitType},
     hud::{
@@ -20,6 +23,7 @@ use crate::{
     },
     name::{turret_name, unit_name},
     player::{Experience, Money},
+    resource_paths,
 };
 
 mod component;
@@ -57,6 +61,11 @@ pub fn setup_buttons(
     asset_server: Res<AssetServer>,
     base_age: Res<BaseAge>,
 ) {
+    commands.spawn((
+        CursorMarker,
+        Transform::from_xyz(TURRET_SPRITE_OFFSET.x, TURRET_SPRITE_OFFSET.y, 4.),
+    ));
+
     let menu_container = commands
         .spawn((
             Node {
@@ -159,7 +168,10 @@ pub fn menu_navigation_button_system(
     >,
     mut button_groups: Query<(&ButtonGroup, &mut Node)>,
     mut menu_text: Single<&mut Text, With<MenuText>>,
+    q_cursor: Single<Entity, With<CursorMarker>>,
+    mut commands: Commands,
 ) {
+    let cursor_entity = q_cursor.into_inner();
     for (interaction, action, mut pressed) in action_query.iter_mut() {
         match *interaction {
             Interaction::Pressed => {
@@ -195,6 +207,8 @@ pub fn menu_navigation_button_system(
                         }
                         MenuNavigationButton::Back => {
                             menu_text.0 = MENU_TEXT.to_string();
+                            commands.trigger(UnMarkTurretSpotsEvent);
+                            commands.entity(cursor_entity).remove::<Sprite>();
                             for (group, mut node) in &mut button_groups {
                                 node.display = match group {
                                     ButtonGroup::Main => Display::Flex,
@@ -316,32 +330,21 @@ pub fn turret_button_system(
     money: Res<Money>,
     help_text_query: Single<(&mut Text, &mut TextColor), With<HelpText>>,
     mut commands: Commands,
-    base_query: Single<Entity, (With<Base>, Without<Enemy>)>,
-    turret_spots_query: Query<Entity, With<BaseTower>>,
     asset_server: Res<AssetServer>,
+    q_cursor: Single<Entity, With<CursorMarker>>,
 ) {
     let (mut text, mut color) = help_text_query.into_inner();
+    let cursor_entity = q_cursor.into_inner();
     for (interaction, action) in action_query.iter() {
         let turret_cost = money.tower_price(action.0, base_age.0);
         match *interaction {
             Interaction::Pressed => {
-                mark_all_turret_places(
-                    &mut commands,
-                    &base_query,
-                    &turret_spots_query,
-                    &asset_server,
-                );
-                match action.0 {
-                    TurretType::Small => {
-                        println!("Small Turret")
-                    }
-                    TurretType::Medium => {
-                        println!("Medium Turret")
-                    }
-                    TurretType::Large => {
-                        println!("Big Turret")
-                    }
-                };
+                commands.trigger(MarkTurretSpotsEvent);
+
+                let turret_sprite = resource_paths::load_turret(action.0, base_age.0);
+                commands
+                    .entity(cursor_entity)
+                    .insert(Sprite::from(asset_server.load(turret_sprite)));
             }
             Interaction::Hovered => {
                 text.0 = format!("{}$ - {}", turret_cost, turret_name(action.0, base_age.0));
@@ -351,48 +354,6 @@ pub fn turret_button_system(
                 text.0.clear();
             }
         }
-    }
-}
-
-#[derive(Component)]
-pub struct TurretSpotMarker;
-
-pub fn mark_all_turret_places(
-    commands: &mut Commands,
-    base_query: &Single<Entity, (With<Base>, Without<Enemy>)>,
-    turret_spots_query: &Query<Entity, With<BaseTower>>,
-    asset_server: &Res<AssetServer>,
-) {
-    let turret_spot_bundle = commands
-        .spawn((
-            Sprite::from(asset_server.load("base/turret_place.png")),
-            Transform::from_xyz(
-                BASE_SIZE.x / 3. + 4.,
-                (BASE_SIZE.y / 4.) + TURRET_Y_OFFSET,
-                3.,
-            ),
-            TurretSpotMarker,
-            children![Sprite::from_color(
-                Color::srgba_u8(255, 255, 255, 100),
-                TURRET_SPOT_SIZE,
-            )],
-        ))
-        .id();
-
-    commands
-        .entity(base_query.entity())
-        .add_child(turret_spot_bundle);
-
-    for entity in turret_spots_query.iter() {
-        let turret_spot_bundle = (
-            Sprite::from(asset_server.load("base/turret_place.png")),
-            TurretSpotMarker,
-            children![Sprite::from_color(
-                Color::srgba_u8(255, 255, 255, 100),
-                TURRET_SPOT_SIZE,
-            )],
-        );
-        commands.entity(entity).with_child(turret_spot_bundle);
     }
 }
 

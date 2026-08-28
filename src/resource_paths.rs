@@ -137,3 +137,24 @@ pub fn load_tower_part(index: usize, age: Age) -> String {
 
     return res;
 }
+
+pub fn load_turret(turret_type: TurretType, age: Age) -> String {
+    let mut res = String::from("turret/");
+
+    res.push(match age {
+        Age::StoneAge => '1',
+        Age::Medival => '2',
+        Age::Renaissance => '3',
+        Age::Modern => '4',
+        Age::Future => '5',
+    });
+    res.push('.');
+    res.push(match turret_type {
+        TurretType::Small => '1',
+        TurretType::Medium => '2',
+        TurretType::Large => '3',
+    });
+
+    res.push_str(".png");
+    return res;
+}

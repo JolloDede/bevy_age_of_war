@@ -1,6 +1,13 @@
 use bevy::{camera::visibility::RenderLayers, prelude::*};
 
-use crate::{Base, consts::*, game_unit::UnitType, state::GameState};
+use crate::{
+    Base, Enemy,
+    consts::*,
+    event::{MarkTurretSpotsEvent, UnMarkTurretSpotsEvent},
+    game_turret::BaseTower,
+    game_unit::UnitType,
+    state::GameState,
+};
 
 mod base;
 use base::*;
@@ -41,6 +48,8 @@ impl<S: States> Plugin for GamePlugin<S> {
         app.add_systems(OnEnter(GameState::InGame), spawn_bases);
         app.add_observer(advance_age_observer);
         app.add_observer(upgrade_base_observer);
+        app.add_observer(mark_turret_spots_observer);
+        app.add_observer(unmark_turret_spots_observer);
 
         app.add_systems(
             Update,
@@ -180,6 +189,59 @@ impl HitBoxSize {
 
 pub fn despawn_game(mut commands: Commands, game_query: Query<Entity, With<GameMarker>>) {
     for entity in game_query.iter() {
+        commands.entity(entity).despawn();
+    }
+}
+
+#[derive(Component)]
+pub struct TurretSpotMarker;
+
+pub fn mark_turret_spots_observer(
+    _upgrade_event: On<MarkTurretSpotsEvent>,
+    mut commands: Commands,
+    base_query: Single<Entity, (With<Base>, Without<Enemy>)>,
+    turret_spots_query: Query<Entity, With<BaseTower>>,
+    asset_server: Res<AssetServer>,
+) {
+    let turret_spot_bundle = commands
+        .spawn((
+            Sprite::from(asset_server.load("base/turret_place.png")),
+            Transform::from_xyz(
+                BASE_SIZE.x / 3. + 4.,
+                (BASE_SIZE.y / 4.) + TURRET_Y_OFFSET,
+                3.,
+            ),
+            TurretSpotMarker,
+            children![Sprite::from_color(
+                Color::srgba_u8(255, 255, 255, 100),
+                TURRET_SPOT_SIZE,
+            )],
+        ))
+        .id();
+
+    commands
+        .entity(base_query.entity())
+        .add_child(turret_spot_bundle);
+
+    for entity in turret_spots_query.iter() {
+        let turret_spot_bundle = (
+            Sprite::from(asset_server.load("base/turret_place.png")),
+            TurretSpotMarker,
+            children![Sprite::from_color(
+                Color::srgba_u8(255, 255, 255, 100),
+                TURRET_SPOT_SIZE,
+            )],
+        );
+        commands.entity(entity).with_child(turret_spot_bundle);
+    }
+}
+
+pub fn unmark_turret_spots_observer(
+    _upgrade_event: On<UnMarkTurretSpotsEvent>,
+    mut commands: Commands,
+    q_turret_spot: Query<Entity, With<TurretSpotMarker>>,
+) {
+    for entity in q_turret_spot.iter() {
         commands.entity(entity).despawn();
     }
 }

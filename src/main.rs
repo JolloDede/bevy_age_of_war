@@ -52,3 +52,6 @@ impl Base {
         Self { age: Age::StoneAge }
     }
 }
+
+#[derive(Component)]
+pub struct CursorMarker;

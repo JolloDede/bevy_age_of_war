@@ -1,7 +1,8 @@
-use bevy::{camera::visibility::RenderLayers, prelude::*};
+use bevy::{camera::visibility::RenderLayers, prelude::*, window::PrimaryWindow};
 use strum::EnumIter;
 
 use crate::{
+    CursorMarker,
     age_of_war::Age,
     consts::*,
     event::{BaseAdvanceAgeEvent, QueueTimerFinishedEvent, UnitSpawnEvent},
@@ -49,6 +50,7 @@ impl<S: States> Plugin for HudPlugin<S> {
                 unit_button_system,
                 turret_button_system,
                 frame_button_system,
+                cursor_system,
             )
                 .run_if(in_state(self.state.clone())),
         );
@@ -243,5 +245,23 @@ pub enum MenuActionButton {
 pub fn despawn_hud(mut commands: Commands, hud_query: Query<Entity, With<HudMarker>>) {
     for entity in hud_query.iter() {
         commands.entity(entity).despawn();
+    }
+}
+
+pub fn cursor_system(
+    q_window: Single<&Window, With<PrimaryWindow>>,
+    q_camera: Single<(&Camera, &GlobalTransform), With<Camera2d>>,
+    q_sprite: Single<&mut Transform, With<CursorMarker>>,
+) {
+    let window = q_window.into_inner();
+    let (camera, camera_transform) = q_camera.into_inner();
+    let mut sprite_transform = q_sprite.into_inner();
+
+    // Get cursor position in screen space, then convert to world coordinates 2D
+    if let Some(screen_position) = window.cursor_position() {
+        if let Ok(world_position) = camera.viewport_to_world_2d(camera_transform, screen_position) {
+            sprite_transform.translation.x = world_position.x + TURRET_SPRITE_OFFSET.x;
+            sprite_transform.translation.y = world_position.y + TURRET_SPRITE_OFFSET.y;
+        }
     }
 }

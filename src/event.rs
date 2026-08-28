@@ -18,3 +18,9 @@ pub struct BaseAdvanceAgeEvent;
 
 #[derive(Event)]
 pub struct UpgradeBaseEvent;
+
+#[derive(Event)]
+pub struct MarkTurretSpotsEvent;
+
+#[derive(Event)]
+pub struct UnMarkTurretSpotsEvent;
