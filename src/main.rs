@@ -7,6 +7,7 @@ mod age_of_war;
 use crate::age_of_war::*;
 
 mod consts;
+mod end_of_game;
 mod event;
 mod game;
 mod game_turret;

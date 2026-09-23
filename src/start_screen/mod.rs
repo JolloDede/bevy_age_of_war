@@ -18,8 +18,7 @@ impl<S: States> Plugin for StartScreenPlugin<S> {
         app.add_systems(Update, button_system);
         app.add_systems(OnExit(GameState::StartScreen), cleanup_menu);
 
-        // app.init_state::<GameState>();
-        app.insert_state(GameState::InGame);
+        app.init_state::<GameState>();
     }
 }
 
@@ -137,7 +136,7 @@ pub fn button_system(
                 game_state.set(GameState::InGame);
             }
             Interaction::Hovered => {
-                let bla = commands
+                let sword = commands
                     .spawn((
                         ImageNode::from(asset_server.load("sword.png")),
                         UiTransform::from_rotation(Rot2::degrees(90.)),
@@ -145,7 +144,7 @@ pub fn button_system(
                     ))
                     .id();
 
-                commands.entity(entity).insert_child(0, bla);
+                commands.entity(entity).insert_child(0, sword);
             }
             Interaction::None => {
                 if let Ok(entity) = selector_query.single() {

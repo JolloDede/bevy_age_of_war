@@ -1,6 +1,9 @@
 use bevy::{app::PluginGroupBuilder, prelude::*};
 
-use crate::{game::GamePlugin, hud::HudPlugin, start_screen::StartScreenPlugin, state::GameState};
+use crate::{
+    end_of_game::EndOfGamePlugin, game::GamePlugin, hud::HudPlugin,
+    start_screen::StartScreenPlugin, state::GameState,
+};
 
 pub struct AgeOfWarPlugins;
 
@@ -10,6 +13,7 @@ impl PluginGroup for AgeOfWarPlugins {
             .add(StartScreenPlugin::new(GameState::StartScreen))
             .add(GamePlugin::new(GameState::InGame))
             .add(HudPlugin::new(GameState::InGame))
+            .add(EndOfGamePlugin::new(GameState::EndOfGame))
     }
 }
 
