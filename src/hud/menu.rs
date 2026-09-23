@@ -10,6 +10,7 @@ use crate::{
         BaseAdvanceAgeEvent, MarkTurretSpotsEvent, UnMarkTurretSpotsEvent, UnitQueueEvent,
         UpgradeBaseEvent,
     },
+    game::TurretComp,
     game_turret::{BaseTower, TurretType},
     game_unit::{GameUnit, UnitType},
     hud::{
@@ -342,9 +343,10 @@ pub fn turret_button_system(
                 commands.trigger(MarkTurretSpotsEvent);
 
                 let turret_sprite = resource_paths::load_turret(action.0, base_age.0);
-                commands
-                    .entity(cursor_entity)
-                    .insert(Sprite::from(asset_server.load(turret_sprite)));
+                commands.entity(cursor_entity).insert((
+                    Sprite::from(asset_server.load(turret_sprite)),
+                    TurretComp(action.0),
+                ));
             }
             Interaction::Hovered => {
                 text.0 = format!("{}$ - {}", turret_cost, turret_name(action.0, base_age.0));

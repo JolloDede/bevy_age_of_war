@@ -1,11 +1,13 @@
 use bevy::{camera::visibility::RenderLayers, prelude::*};
 
 use crate::{
-    Base, Enemy,
+    Base, CursorMarker, Enemy,
     consts::*,
     event::{MarkTurretSpotsEvent, UnMarkTurretSpotsEvent},
-    game_turret::BaseTower,
+    game_turret::{BaseTower, TurretType},
     game_unit::UnitType,
+    hud::BaseAge,
+    resource_paths,
     state::GameState,
 };
 
@@ -61,6 +63,7 @@ impl<S: States> Plugin for GamePlugin<S> {
                 clear_unit_collision,
                 unit_collision_system.after(clear_unit_collision),
                 base_collision_system.after(clear_unit_collision),
+                handle_turret_spot_click,
             )
                 .run_if(in_state(self.state.clone())),
         );
@@ -200,7 +203,7 @@ pub fn mark_turret_spots_observer(
     _upgrade_event: On<MarkTurretSpotsEvent>,
     mut commands: Commands,
     base_query: Single<Entity, (With<Base>, Without<Enemy>)>,
-    turret_spots_query: Query<Entity, With<BaseTower>>,
+    turret_spots_query: Query<Entity, (With<BaseTower>, Without<TurretComp>)>,
     asset_server: Res<AssetServer>,
 ) {
     let turret_spot_bundle = commands
@@ -212,10 +215,10 @@ pub fn mark_turret_spots_observer(
                 3.,
             ),
             TurretSpotMarker,
-            children![Sprite::from_color(
-                Color::srgba_u8(255, 255, 255, 100),
-                TURRET_SPOT_SIZE,
-            )],
+            children![
+                Sprite::from_color(Color::srgba_u8(255, 255, 255, 255), TURRET_SPOT_SIZE,),
+                Pickable::default(),
+            ],
         ))
         .id();
 
@@ -227,10 +230,10 @@ pub fn mark_turret_spots_observer(
         let turret_spot_bundle = (
             Sprite::from(asset_server.load("base/turret_place.png")),
             TurretSpotMarker,
-            children![Sprite::from_color(
-                Color::srgba_u8(255, 255, 255, 100),
-                TURRET_SPOT_SIZE,
-            )],
+            children![
+                Sprite::from_color(Color::srgba_u8(255, 255, 255, 100), TURRET_SPOT_SIZE,),
+                Pickable::default(),
+            ],
         );
         commands.entity(entity).with_child(turret_spot_bundle);
     }
@@ -239,9 +242,65 @@ pub fn mark_turret_spots_observer(
 pub fn unmark_turret_spots_observer(
     _upgrade_event: On<UnMarkTurretSpotsEvent>,
     mut commands: Commands,
-    q_turret_spot: Query<Entity, With<TurretSpotMarker>>,
+    q_turret_spot: Query<Entity, (With<TurretSpotMarker>, Without<TurretComp>)>,
 ) {
     for entity in q_turret_spot.iter() {
         commands.entity(entity).despawn();
     }
 }
+
+pub fn handle_turret_spot_click(
+    mouse: Res<ButtonInput<MouseButton>>,
+    mut spot_query: Query<
+        (&GlobalTransform, Entity, &mut Sprite, &mut Transform),
+        With<TurretSpotMarker>,
+    >,
+    camera: Single<(&Camera, &GlobalTransform)>,
+    windows: Query<&Window>,
+    q_cursor: Single<(Entity, &TurretComp), With<CursorMarker>>,
+    mut commands: Commands,
+    base_age: Res<BaseAge>,
+    asset_server: Res<AssetServer>,
+) {
+    let Ok(windows) = windows.single() else {
+        return;
+    };
+
+    let (camera, camera_transform) = *camera;
+    if let Some(cursor_pos) = windows
+        .cursor_position()
+        .and_then(|cursor| camera.viewport_to_world_2d(camera_transform, cursor).ok())
+        && mouse.just_pressed(MouseButton::Left)
+    {
+        for (g_trans, spot_entity, mut spot_sprite, mut trans) in spot_query.iter_mut() {
+            let half_size = TURRET_SPOT_SIZE / 2.;
+            let min = g_trans.translation().truncate() - half_size;
+            let max = g_trans.translation().truncate() + half_size;
+
+            if cursor_pos.x >= min.x
+                && cursor_pos.x <= max.x
+                && cursor_pos.y >= min.y
+                && cursor_pos.y <= max.y
+            {
+                let (entity, tt_comp) = *q_cursor;
+                commands.entity(entity).remove::<Sprite>();
+                commands.entity(entity).remove::<TurretComp>();
+
+                commands
+                    .entity(spot_entity)
+                    .insert((tt_comp.clone(), AttackRange::new(tt_comp.0, base_age.0)));
+                commands.entity(spot_entity).despawn_children();
+
+                spot_sprite.image =
+                    asset_server.load(resource_paths::load_turret(tt_comp.0, base_age.0));
+                trans.translation.x = 70.;
+                trans.translation.y = 36.;
+
+                commands.trigger(UnMarkTurretSpotsEvent);
+            }
+        }
+    }
+}
+
+#[derive(Component, Clone)]
+pub struct TurretComp(pub TurretType);

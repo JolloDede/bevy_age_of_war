@@ -9,6 +9,7 @@ use crate::{
     Base, Enemy,
     age_of_war::Age,
     game::{HitBoxSize, health_bar::Health, unit::UnitComp},
+    game_turret::TurretType,
     game_unit::UnitType,
     player::{Experience, GameFinishedEvent, Money},
 };
@@ -26,6 +27,34 @@ impl From<UnitType> for AttackRange {
             UnitType::Ranged => 120.,
             UnitType::Tank => 80.,
             UnitType::Super => 3.,
+        };
+
+        Self(range)
+    }
+}
+
+impl AttackRange {
+    pub fn new(t_type: TurretType, age: Age) -> Self {
+        let range = match (t_type, age) {
+            (TurretType::Small, Age::StoneAge) => 20.,
+            (TurretType::Medium, Age::StoneAge) => 20.,
+            (TurretType::Large, Age::StoneAge) => 20.,
+
+            (TurretType::Small, Age::Medival) => 20.,
+            (TurretType::Medium, Age::Medival) => 20.,
+            (TurretType::Large, Age::Medival) => 20.,
+
+            (TurretType::Small, Age::Renaissance) => 20.,
+            (TurretType::Medium, Age::Renaissance) => 20.,
+            (TurretType::Large, Age::Renaissance) => 20.,
+
+            (TurretType::Small, Age::Modern) => 20.,
+            (TurretType::Medium, Age::Modern) => 20.,
+            (TurretType::Large, Age::Modern) => 20.,
+
+            (TurretType::Small, Age::Future) => 20.,
+            (TurretType::Medium, Age::Future) => 20.,
+            (TurretType::Large, Age::Future) => 20.,
         };
 
         Self(range)
@@ -57,7 +86,7 @@ impl AttackDamange {
 
 pub fn draw_attack_ranges(
     mut gizmos: Gizmos,
-    units: Query<(&Transform, &AttackRange, &Sprite)>,
+    units: Query<(&GlobalTransform, &AttackRange, &Sprite)>,
     images: Res<Assets<Image>>,
 ) {
     for (trans, range, sprite) in &units {
@@ -65,8 +94,8 @@ pub fn draw_attack_ranges(
             continue;
         };
         let position = Vec2::new(
-            trans.translation.x,
-            trans.translation.y + (image.height() as f32 / 4.),
+            trans.translation().x,
+            trans.translation().y + (image.height() as f32 / 4.),
         );
 
         gizmos.circle_2d(position, range.0, Color::srgb(1.0, 0.0, 0.0));
