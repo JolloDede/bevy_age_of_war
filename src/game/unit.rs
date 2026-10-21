@@ -10,7 +10,7 @@ use crate::{
     consts::*,
     event::UnitSpawnEvent,
     game::{
-        GROUND_Y, HitBoxSize,
+        GROUND_Y, GameMarker, HitBoxSize,
         combat::{AttackCooldown, AttackDamange, AttackRange},
         health_bar::{Health, health_bar_node},
     },
@@ -150,6 +150,7 @@ pub fn new_unit_comp(
         AttackRange::from(unit.r#type),
         AttackDamange::new(unit.age, unit.r#type),
         AttackCooldown(Timer::from_seconds(1., TimerMode::Once)),
+        GameMarker,
         UnitComp(unit.clone()),
         hitbox,
     ));

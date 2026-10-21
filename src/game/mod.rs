@@ -7,6 +7,7 @@ use crate::{
     game_turret::{BaseTower, TurretType},
     game_unit::UnitType,
     hud::BaseAge,
+    player::GameFinishedEvent,
     resource_paths,
     state::GameState,
 };
@@ -37,6 +38,7 @@ impl<S: States> Plugin for GamePlugin<S> {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_camera);
         app.add_systems(OnExit(GameState::InGame), despawn_game);
+        app.add_observer(game_finish_event);
 
         app.add_systems(
             Update,
@@ -94,7 +96,6 @@ fn spawn_camera(mut commands: Commands) {
         Transform::from_xyz(LEVEL_START, 0.0, 1.0),
         RenderLayers::layer(GAME_LAYER),
         GameCamera,
-        GameMarker,
     ));
 }
 
@@ -304,3 +305,10 @@ pub fn handle_turret_spot_click(
 
 #[derive(Component, Clone)]
 pub struct TurretComp(pub TurretType);
+
+pub fn game_finish_event(
+    _game_finish: On<GameFinishedEvent>,
+    mut game_state: ResMut<NextState<GameState>>,
+) {
+    game_state.set(GameState::EndOfGame);
+}

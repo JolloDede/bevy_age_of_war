@@ -10,7 +10,7 @@ use crate::{
         BaseAdvanceAgeEvent, MarkTurretSpotsEvent, UnMarkTurretSpotsEvent, UnitQueueEvent,
         UpgradeBaseEvent,
     },
-    game::TurretComp,
+    game::{GameMarker, TurretComp},
     game_turret::{BaseTower, TurretType},
     game_unit::{GameUnit, UnitType},
     hud::{
@@ -391,6 +391,7 @@ pub fn setup_hud(
                 ..default()
             },
             ZIndex(2),
+            GameMarker,
         ))
         .id();
 
