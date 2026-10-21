@@ -72,7 +72,7 @@ pub fn setup_buttons(
             Node {
                 position_type: PositionType::Absolute,
                 left: percent(67),
-                top: px(30),
+                top: percent(3),
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Start,
                 ..default()
