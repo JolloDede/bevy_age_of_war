@@ -64,6 +64,7 @@ pub fn spawn_bases(mut commands: Commands, asset_server: Res<AssetServer>) {
             HitBoxSize::new_base(),
             Enemy,
             EnemyBaseQueueTimer(Timer::from_seconds(4., TimerMode::Repeating)),
+            GameMarker,
         ))
         .with_children(|parent| {
             parent.spawn((

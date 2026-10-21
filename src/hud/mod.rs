@@ -34,6 +34,7 @@ pub struct HudMarker;
 impl<S: States> Plugin for HudPlugin<S> {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::InGame), setup_hud);
+        app.add_systems(OnEnter(GameState::InGame), reset_resources);
         app.add_systems(OnExit(GameState::InGame), despawn_hud);
 
         app.add_systems(

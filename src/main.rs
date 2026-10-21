@@ -26,7 +26,7 @@ fn main() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: "Bevy Age of War".to_string(),
-                        resolution: (800, 400).into(),
+                        // resolution: (1920, 1080).into(),
                         ..Default::default()
                     }),
                     ..Default::default()

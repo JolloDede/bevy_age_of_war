@@ -21,6 +21,7 @@ use crate::{
             turret_buttons::turret_button_spawner,
             unit_buttons::unit_button_spawner,
         },
+        queue::EntityQueue,
     },
     name::{turret_name, unit_name},
     player::{Experience, Money},
@@ -65,6 +66,7 @@ pub fn setup_buttons(
     commands.spawn((
         CursorMarker,
         Transform::from_xyz(TURRET_SPRITE_OFFSET.x, TURRET_SPRITE_OFFSET.y, 4.),
+        HudMarker,
     ));
 
     let menu_container = commands
@@ -88,11 +90,14 @@ pub fn setup_buttons(
         .id();
 
     let button_container = commands
-        .spawn((Node {
-            flex_direction: FlexDirection::Column,
-            align_items: AlignItems::Center,
-            ..default()
-        },))
+        .spawn((
+            Node {
+                flex_direction: FlexDirection::Column,
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            HudMarker,
+        ))
         .id();
 
     let button_node = Node {
@@ -185,7 +190,6 @@ pub fn menu_navigation_button_system(
                         MenuNavigationButton::Unit => {
                             menu_text.0 = "Menu - Units".to_string();
                             for (group, mut node) in &mut button_groups {
-                                debug!("Found any buttongroups {:?} {:?}", group, node.display);
                                 node.display = match group {
                                     ButtonGroup::Main => Display::None,
                                     ButtonGroup::Units => Display::Flex,
@@ -391,7 +395,7 @@ pub fn setup_hud(
                 ..default()
             },
             ZIndex(2),
-            GameMarker,
+            HudMarker,
         ))
         .id();
 
@@ -448,4 +452,16 @@ pub fn collectable_system(
 
     let mut experience_text = text_query.p1().into_inner();
     experience_text.0 = experience.0.to_string();
+}
+
+pub fn reset_resources(
+    mut entity_queue: ResMut<EntityQueue>,
+    mut base_age: ResMut<BaseAge>,
+    mut money: ResMut<Money>,
+    mut exp: ResMut<Experience>,
+) {
+    *entity_queue = EntityQueue::default();
+    *base_age = BaseAge::default();
+    money.0 = 175;
+    exp.0 = 0;
 }
