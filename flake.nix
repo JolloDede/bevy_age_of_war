@@ -34,6 +34,9 @@
                   "rust-analyzer"
                   "clippy"
                 ];
+                targets = [
+                  "wasm32-unknown-unknown"
+                ];
               })
               pkg-config
             ]
@@ -56,6 +59,7 @@
               wayland
 
               just
+              wasm-bindgen-cli_0_2_108
             ];
             RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
             RUST_BACKTRACE = 1;
@@ -65,6 +69,7 @@
               xorg.libXi
               xorg.libXcursor
               libxkbcommon
+
             ];
           };
       }
